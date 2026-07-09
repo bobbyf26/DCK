@@ -31,6 +31,8 @@
     --star: #F0A32E;
     --good: #1F8A54;
     --good-soft: #E3F2EA;
+    --bad: #C43D2F;
+    --bad-soft: #FAE9E6;
     --shadow: 0 1px 2px rgba(20, 43, 70, .06), 0 8px 24px rgba(20, 43, 70, .07);
   }
 
@@ -128,6 +130,10 @@
   .rating-num { font-weight: 800; }
   .rating-line a { font-weight: 600; }
   .dot { color: var(--muted); }
+  .open-status { color: var(--muted); }
+  .open-status b { font-weight: 700; }
+  .open-status.open b { color: var(--good); }
+  .open-status.closed b { color: var(--bad); }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
   .chip {
     background: var(--brand-soft); color: var(--brand);
@@ -273,6 +279,7 @@
     display: inline-block; background: var(--good-soft); color: var(--good);
     font-size: 12px; font-weight: 700; border-radius: 999px; padding: 2px 10px; margin-left: 8px;
   }
+  .open-pill.closed { background: var(--bad-soft); color: var(--bad); }
 
   /* ---------- mobile ---------- */
   .callbar { display: none; }
@@ -341,6 +348,9 @@
         <a href="#reviews">(127 reviews)</a> <!-- EDIT: review count -->
         <span class="dot">•</span>
         <span class="muted">Serving Dallas–Fort Worth, TX</span> <!-- EDIT: service area -->
+        <span class="dot">•</span>
+        <span class="open-status" id="open-status"><b>Open</b></span> <!-- auto-filled from HOURS script below -->
+
       </div>
       <div class="chips"> <!-- EDIT: category chips -->
         <span class="chip">Stamped Concrete</span>
@@ -568,10 +578,10 @@
         <div class="contact-row" style="align-items:flex-start">
           <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 10.6l4.2 2.5-.8 1.3L11 13.5V7h2v5.6z"/></svg>
           <div style="flex:1">
-            <b>Hours <span class="open-pill">Open now</span></b> <!-- EDIT: open state -->
-            <table class="hours"> <!-- EDIT: hours; move class="today" to current day -->
+            <b>Hours <span class="open-pill" id="open-pill">Open now</span></b> <!-- auto-filled from HOURS script below -->
+            <table class="hours"> <!-- EDIT: display hours (keep in sync with HOURS script) -->
               <tr><td>Mon–Fri</td><td>7:00 AM – 6:00 PM</td></tr>
-              <tr class="today"><td>Saturday</td><td>8:00 AM – 2:00 PM</td></tr>
+              <tr><td>Saturday</td><td>8:00 AM – 2:00 PM</td></tr>
               <tr><td>Sunday</td><td>Closed</td></tr>
             </table>
           </div>
@@ -591,6 +601,71 @@
   <a class="btn ghost" href="tel:+12145550142" style="flex:1">Call</a>
   <a class="btn" href="#q-name" style="flex:2">Get a free quote</a>
 </div>
+
+<!-- ======== OPEN/CLOSED STATUS (Google-style) ========
+  EDIT: set the weekly hours below in 24-hour "HH:MM" format.
+  Index 0 = Sunday … 6 = Saturday. Use null for closed days.
+  The header badge and the sidebar pill update automatically —
+  no manual "open/closed" editing needed per visit. -->
+<script>
+(function () {
+  var HOURS = [
+    null,                 // Sunday
+    ["07:00", "18:00"],   // Monday
+    ["07:00", "18:00"],   // Tuesday
+    ["07:00", "18:00"],   // Wednesday
+    ["07:00", "18:00"],   // Thursday
+    ["07:00", "18:00"],   // Friday
+    ["08:00", "14:00"]    // Saturday
+  ];
+  var DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  function toMins(hhmm) {
+    var p = hhmm.split(":");
+    return (+p[0]) * 60 + (+p[1]);
+  }
+  function fmt(mins) {
+    var h = Math.floor(mins / 60), m = mins % 60;
+    var ap = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return h + (m ? ":" + String(m).padStart(2, "0") : "") + " " + ap;
+  }
+
+  var now = new Date();
+  var day = now.getDay();
+  var mins = now.getHours() * 60 + now.getMinutes();
+  var today = HOURS[day];
+  var isOpen = !!today && mins >= toMins(today[0]) && mins < toMins(today[1]);
+
+  var text;
+  if (isOpen) {
+    text = "<b>Open</b> · Closes " + fmt(toMins(today[1]));
+  } else {
+    // find the next day (starting today) with opening hours
+    var next = "", d, hrs;
+    for (var i = 0; i < 7; i++) {
+      d = (day + i) % 7;
+      hrs = HOURS[d];
+      if (!hrs) continue;
+      if (i === 0 && mins >= toMins(hrs[0])) continue; // already past today's open
+      next = "Opens " + fmt(toMins(hrs[0])) + (i === 0 ? "" : i === 1 ? " tomorrow" : " " + DAYS[d]);
+      break;
+    }
+    text = "<b>Closed</b>" + (next ? " · " + next : "");
+  }
+
+  var badge = document.getElementById("open-status");
+  if (badge) {
+    badge.innerHTML = text;
+    badge.classList.add(isOpen ? "open" : "closed");
+  }
+  var pill = document.getElementById("open-pill");
+  if (pill) {
+    pill.textContent = isOpen ? "Open now" : "Closed";
+    pill.classList.toggle("closed", !isOpen);
+  }
+})();
+</script>
 
 <!-- ======== SEO: LocalBusiness schema — EDIT: every field ======== -->
 <script type="application/ld+json">
@@ -618,6 +693,7 @@
   "priceRange": "$$"
 }
 </script>
+
 
 
 
