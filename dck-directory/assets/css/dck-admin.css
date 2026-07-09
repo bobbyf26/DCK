@@ -1,0 +1,23 @@
+/* DCK Directory — admin meta box styling. */
+.dck-admin-fields .dck-group { margin: 22px 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: #1d2327; border-top: 1px solid #e2e4e7; padding-top: 16px; }
+.dck-admin-fields .dck-group:first-child { border-top: 0; margin-top: 4px; }
+.dck-prem { background: #E7EFF9; color: #14406F; font-size: 10px; padding: 2px 8px; border-radius: 999px; margin-left: 6px; letter-spacing: .04em; }
+.dck-admin-fields .dck-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; }
+.dck-admin-fields p { margin: 0 0 6px; }
+.dck-admin-fields label { display: block; font-weight: 600; font-size: 12px; margin-bottom: 3px; }
+.dck-admin-fields input[type=text], .dck-admin-fields input[type=url], .dck-admin-fields input[type=email], .dck-admin-fields textarea { width: 100%; }
+.dck-admin-fields .dck-full { grid-column: 1 / -1; }
+.dck-hint { color: #646970; font-style: italic; font-size: 12px; }
+.dck-hours { border-collapse: collapse; }
+.dck-hours td { padding: 3px 8px 3px 0; }
+.dck-hours input[type=time] { width: 120px; }
+
+.dck-gallery-preview { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.dck-gallery-preview span { position: relative; width: 70px; height: 70px; border-radius: 6px; overflow: hidden; }
+.dck-gallery-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dck-gallery-preview .dck-remove { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,.6); color: #fff; border: 0; border-radius: 50%; width: 18px; height: 18px; line-height: 16px; cursor: pointer; padding: 0; }
+
+.dck-repeater-item { border: 1px solid #e2e4e7; border-radius: 6px; padding: 12px; margin-bottom: 10px; display: grid; gap: 8px; }
+.dck-repeater-item input, .dck-repeater-item textarea, .dck-repeater-item select { width: 100%; }
+.dck-repeater-item .dck-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dck-remove-row { color: #b32d2e !important; justify-self: start; }
