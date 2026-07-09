@@ -237,6 +237,8 @@
   details.faq p { padding-bottom: 14px; margin: 0; font-size: 14.5px; color: var(--muted); max-width: 66ch; }
 
   /* ---------- sidebar ---------- */
+  /* top offset is adjusted by the sticky script below when the
+     sidebar is taller than the viewport (pins by its bottom instead) */
   .side { position: sticky; top: 20px; display: grid; gap: 16px; }
   .cta-card { border-top: 4px solid var(--brand); }
   .cta-card h2 { font-size: 19px; }
@@ -667,6 +669,23 @@
 })();
 </script>
 
+<!-- ======== STICKY SIDEBAR FIX (no editing needed) ========
+  If the sidebar is taller than the screen, stick it by its bottom
+  edge instead of its top so the whole thing is reachable. -->
+<script>
+(function () {
+  var side = document.querySelector(".side");
+  if (!side) return;
+  function adjust() {
+    var overflow = side.offsetHeight + 40 - window.innerHeight;
+    side.style.top = overflow > 0 ? (-overflow + 20) + "px" : "20px";
+  }
+  window.addEventListener("resize", adjust);
+  window.addEventListener("load", adjust);
+  adjust();
+})();
+</script>
+
 <!-- ======== SEO: LocalBusiness schema — EDIT: every field ======== -->
 <script type="application/ld+json">
 {
@@ -693,6 +712,7 @@
   "priceRange": "$$"
 }
 </script>
+
 
 
 
