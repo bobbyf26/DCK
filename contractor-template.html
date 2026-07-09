@@ -48,18 +48,8 @@
   a:hover, a:focus-visible { text-decoration: underline; }
   :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 4px; }
 
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 20px 20px 0; }
 
-  /* ---------- breadcrumb ---------- */
-  .crumbs {
-    padding: 16px 0 12px;
-    font-size: 13px;
-    color: var(--muted);
-    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
-  }
-  .crumbs a { color: var(--muted); }
-  .crumbs .sep { opacity: .5; }
-  .crumbs .here { color: var(--ink); font-weight: 600; }
 
   /* ---------- photo mosaic ---------- */
   .mosaic {
@@ -309,14 +299,6 @@
 
 <div class="wrap">
 
-  <!-- ======== BREADCRUMB — EDIT: state / city / category / name ======== -->
-  <nav class="crumbs" aria-label="Breadcrumb">
-    <a href="/">Home</a> <span class="sep">›</span>
-    <a href="/texas/">Texas</a> <span class="sep">›</span>
-    <a href="/texas/dallas/">Dallas</a> <span class="sep">›</span>
-    <a href="/texas/dallas/stamped-concrete/">Stamped Concrete</a> <span class="sep">›</span>
-    <span class="here">Lone Star Decorative Concrete</span>
-  </nav>
 
   <!-- ======== PHOTO MOSAIC — EDIT: replace each div with <img src alt> ======== -->
   <section class="mosaic" aria-label="Project photos">
@@ -712,6 +694,7 @@
   "priceRange": "$$"
 }
 </script>
+
 
 
 
