@@ -97,7 +97,7 @@
   /* ---------- identity header ---------- */
   .head {
     display: flex; align-items: flex-start; gap: 18px;
-    padding: 22px 0 4px;
+    padding: 22px 0 26px;
   }
   .avatar {
     flex: none; width: 72px; height: 72px; border-radius: 14px;
@@ -136,21 +136,6 @@
   }
   .chip.loc { background: transparent; border: 1px solid var(--line); color: var(--muted); }
 
-  /* ---------- quick facts strip ---------- */
-  .facts {
-    display: grid; grid-template-columns: repeat(5, 1fr);
-    gap: 1px; background: var(--line);
-    border: 1px solid var(--line); border-radius: 12px;
-    overflow: hidden; margin: 20px 0 26px;
-  }
-  .fact { background: var(--card); padding: 14px 16px; }
-  .fact b { display: block; font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
-  .fact small {
-    display: block; margin-top: 2px;
-    font-size: 11px; font-weight: 600; letter-spacing: .06em;
-    text-transform: uppercase; color: var(--muted);
-  }
-  .fact .ok { color: var(--good); }
 
   /* ---------- two-column body ---------- */
   .cols { display: grid; grid-template-columns: 1fr 360px; gap: 28px; align-items: start; }
@@ -294,8 +279,6 @@
   @media (max-width: 900px) {
     .cols { grid-template-columns: 1fr; }
     .side { position: static; }
-    .facts { grid-template-columns: repeat(2, 1fr); }
-    .facts .fact:last-child { grid-column: 1 / -1; }
     .mosaic { grid-template-columns: 1fr 1fr; grid-template-rows: 150px 100px; }
     .mosaic .photo:first-child { grid-column: 1 / 3; grid-row: 1; }
     .mosaic .photo:nth-child(n+4) { display: none; }
@@ -368,14 +351,6 @@
     </div>
   </header>
 
-  <!-- ======== QUICK FACTS — EDIT: all five values ======== -->
-  <section class="facts" aria-label="Highlights">
-    <div class="fact"><b>15+ yrs</b><small>In business</small></div>
-    <div class="fact"><b class="ok">✓ Yes</b><small>Licensed &amp; insured</small></div>
-    <div class="fact"><b>~1 hour</b><small>Response time</small></div>
-    <div class="fact"><b>500+</b><small>Projects completed</small></div>
-    <div class="fact"><b>5-year</b><small>Workmanship warranty</small></div>
-  </section>
 
   <div class="cols">
     <div class="main">
@@ -643,6 +618,7 @@
   "priceRange": "$$"
 }
 </script>
+
 
 
 </body>
