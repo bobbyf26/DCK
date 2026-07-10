@@ -27,6 +27,22 @@ class DCK_Post_Types {
 
 	private function __construct() {
 		add_action( 'init', array( $this, 'register' ) );
+		// Self-seed default terms once per version, so updates that overwrite
+		// files (without a clean re-activation) still populate new taxonomies.
+		add_action( 'init', array( $this, 'maybe_seed' ), 20 );
+	}
+
+	/**
+	 * Seed default terms once per plugin version. Idempotent: only inserts
+	 * terms that don't already exist, so deleting a default won't resurrect it
+	 * until the version changes again.
+	 */
+	public function maybe_seed() {
+		if ( get_option( 'dck_seed_version' ) === DCK_DIR_VERSION ) {
+			return;
+		}
+		$this->seed_default_services();
+		update_option( 'dck_seed_version', DCK_DIR_VERSION, false );
 	}
 
 	/**
