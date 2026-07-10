@@ -102,6 +102,7 @@
 
 		var form      = root.querySelector( '[data-dck-search]' );
 		var serviceEl = root.querySelector( '[data-search-service]' );
+		var areaEl    = root.querySelector( '[data-search-area]' );
 		var locEl     = root.querySelector( '[data-search-location]' );
 		var kwEl      = root.querySelector( '[data-search-keyword]' );
 		var results   = root.querySelector( '[data-results]' );
@@ -113,6 +114,7 @@
 		function params( p ) {
 			return {
 				service: serviceEl ? serviceEl.value : '',
+				area: areaEl ? areaEl.value : '',
 				location: locEl ? locEl.value : '',
 				keyword: kwEl ? kwEl.value : '',
 				paged: p
@@ -137,7 +139,7 @@
 		if ( form ) {
 			form.addEventListener( 'submit', function ( e ) { e.preventDefault(); run( false ); } );
 		}
-		[ serviceEl, locEl ].forEach( function ( el ) { if ( el ) { el.addEventListener( 'change', function () { run( false ); } ); } } );
+		[ serviceEl, areaEl, locEl ].forEach( function ( el ) { if ( el ) { el.addEventListener( 'change', function () { run( false ); } ); } } );
 
 		root.querySelectorAll( '[data-service]' ).forEach( function ( tile ) {
 			tile.addEventListener( 'click', function () {

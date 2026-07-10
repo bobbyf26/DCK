@@ -33,6 +33,7 @@ class DCK_Templates {
 	public function route( $template ) {
 		if ( is_post_type_archive( DCK_Post_Types::POST_TYPE )
 			|| is_tax( DCK_Post_Types::TAX_SERVICE )
+			|| is_tax( DCK_Post_Types::TAX_AREA )
 			|| is_tax( DCK_Post_Types::TAX_LOCATION ) ) {
 			$custom = DCK_DIR_PATH . 'templates/archive-contractor.php';
 			if ( file_exists( $custom ) ) {

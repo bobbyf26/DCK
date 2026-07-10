@@ -35,10 +35,12 @@ class DCK_Shortcodes {
 	public function directory( $atts ) {
 		dck_remember_page( 'directory' );
 		$services = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_SERVICE, 'hide_empty' => false ) );
+		$areas    = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_AREA, 'hide_empty' => false ) );
 		$states   = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_LOCATION, 'parent' => 0, 'hide_empty' => false ) );
 
 		// Pre-selected from query string (e.g. category tile links).
 		$sel_service  = isset( $_GET['service'] ) ? sanitize_title( wp_unslash( $_GET['service'] ) ) : '';
+		$sel_area     = isset( $_GET['area'] ) ? sanitize_title( wp_unslash( $_GET['area'] ) ) : '';
 		$sel_location = isset( $_GET['location'] ) ? sanitize_title( wp_unslash( $_GET['location'] ) ) : '';
 
 		ob_start();
@@ -50,11 +52,20 @@ class DCK_Shortcodes {
 					<p><?php esc_html_e( 'Browse verified contractors for stamped, stained, epoxy, and polished concrete.', 'dck-directory' ); ?></p>
 					<form class="dck-searchbar" data-dck-search>
 						<div class="dck-field">
-							<label><?php esc_html_e( 'What', 'dck-directory' ); ?></label>
+							<label><?php esc_html_e( 'Coating system', 'dck-directory' ); ?></label>
 							<select name="service" data-search-service>
-								<option value=""><?php esc_html_e( 'All services', 'dck-directory' ); ?></option>
+								<option value=""><?php esc_html_e( 'All systems', 'dck-directory' ); ?></option>
 								<?php foreach ( $services as $t ) : ?>
 									<option value="<?php echo esc_attr( $t->slug ); ?>" <?php selected( $sel_service, $t->slug ); ?>><?php echo esc_html( $t->name ); ?></option>
+								<?php endforeach; ?>
+							</select>
+						</div>
+						<div class="dck-field">
+							<label><?php esc_html_e( 'Area', 'dck-directory' ); ?></label>
+							<select name="area" data-search-area>
+								<option value=""><?php esc_html_e( 'All areas', 'dck-directory' ); ?></option>
+								<?php foreach ( $areas as $t ) : ?>
+									<option value="<?php echo esc_attr( $t->slug ); ?>" <?php selected( $sel_area, $t->slug ); ?>><?php echo esc_html( $t->name ); ?></option>
 								<?php endforeach; ?>
 							</select>
 						</div>
@@ -76,8 +87,8 @@ class DCK_Shortcodes {
 				</div>
 
 				<?php if ( ! empty( $services ) && ! is_wp_error( $services ) ) : ?>
-				<section class="dck-tiles" aria-label="<?php esc_attr_e( 'Browse by service', 'dck-directory' ); ?>">
-					<h2><?php esc_html_e( 'Browse by service', 'dck-directory' ); ?></h2>
+				<section class="dck-tiles" aria-label="<?php esc_attr_e( 'Browse by coating system', 'dck-directory' ); ?>">
+					<h2><?php esc_html_e( 'Browse by coating system', 'dck-directory' ); ?></h2>
 					<div class="dck-tiles__grid">
 						<?php foreach ( $services as $t ) : ?>
 							<button type="button" class="dck-tile" data-service="<?php echo esc_attr( $t->slug ); ?>">
@@ -138,6 +149,7 @@ class DCK_Shortcodes {
 		}
 
 		$services = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_SERVICE, 'hide_empty' => false ) );
+		$areas    = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_AREA, 'hide_empty' => false ) );
 		$notice   = $this->flash();
 
 		ob_start();
@@ -161,10 +173,16 @@ class DCK_Shortcodes {
 						<label><?php esc_html_e( 'State', 'dck-directory' ); ?><input type="text" name="state" required></label>
 						<label><?php esc_html_e( 'ZIP', 'dck-directory' ); ?><input type="text" name="zip"></label>
 					</div>
-					<label><?php esc_html_e( 'Categories (select all that apply)', 'dck-directory' ); ?></label>
+					<label><?php esc_html_e( 'Coating systems you offer (select all that apply)', 'dck-directory' ); ?></label>
 					<div class="dck-checks">
 						<?php foreach ( $services as $t ) : ?>
 							<label class="dck-check"><input type="checkbox" name="services[]" value="<?php echo (int) $t->term_id; ?>"> <?php echo esc_html( $t->name ); ?></label>
+						<?php endforeach; ?>
+					</div>
+					<label><?php esc_html_e( 'Service areas / applications (select all that apply)', 'dck-directory' ); ?></label>
+					<div class="dck-checks">
+						<?php foreach ( $areas as $t ) : ?>
+							<label class="dck-check"><input type="checkbox" name="areas[]" value="<?php echo (int) $t->term_id; ?>"> <?php echo esc_html( $t->name ); ?></label>
 						<?php endforeach; ?>
 					</div>
 					<label class="dck-check"><input type="checkbox" name="terms" required> <?php esc_html_e( 'I confirm I represent this business.', 'dck-directory' ); ?></label>
@@ -274,13 +292,22 @@ class DCK_Shortcodes {
 						<label><?php esc_html_e( 'About your business', 'dck-directory' ); ?>
 							<textarea name="about" rows="5"><?php echo esc_textarea( $listing->post_content ); ?></textarea>
 						</label>
-						<label><?php esc_html_e( 'Categories', 'dck-directory' ); ?></label>
+						<label><?php esc_html_e( 'Coating systems you offer', 'dck-directory' ); ?></label>
 						<div class="dck-checks">
 							<?php
-							$assigned = wp_get_post_terms( $post_id, DCK_Post_Types::TAX_SERVICE, array( 'fields' => 'ids' ) );
-							$all      = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_SERVICE, 'hide_empty' => false ) );
-							foreach ( $all as $t ) : ?>
-								<label class="dck-check"><input type="checkbox" name="services[]" value="<?php echo (int) $t->term_id; ?>" <?php checked( in_array( $t->term_id, $assigned, true ) ); ?>> <?php echo esc_html( $t->name ); ?></label>
+							$assigned_svc = wp_get_post_terms( $post_id, DCK_Post_Types::TAX_SERVICE, array( 'fields' => 'ids' ) );
+							$all_svc      = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_SERVICE, 'hide_empty' => false ) );
+							foreach ( $all_svc as $t ) : ?>
+								<label class="dck-check"><input type="checkbox" name="services[]" value="<?php echo (int) $t->term_id; ?>" <?php checked( in_array( $t->term_id, $assigned_svc, true ) ); ?>> <?php echo esc_html( $t->name ); ?></label>
+							<?php endforeach; ?>
+						</div>
+						<label><?php esc_html_e( 'Service areas / applications', 'dck-directory' ); ?></label>
+						<div class="dck-checks">
+							<?php
+							$assigned_area = wp_get_post_terms( $post_id, DCK_Post_Types::TAX_AREA, array( 'fields' => 'ids' ) );
+							$all_area      = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_AREA, 'hide_empty' => false ) );
+							foreach ( $all_area as $t ) : ?>
+								<label class="dck-check"><input type="checkbox" name="areas[]" value="<?php echo (int) $t->term_id; ?>" <?php checked( in_array( $t->term_id, $assigned_area, true ) ); ?>> <?php echo esc_html( $t->name ); ?></label>
 							<?php endforeach; ?>
 						</div>
 						<label><?php esc_html_e( 'Logo / cover image', 'dck-directory' ); ?><input type="file" name="logo" accept="image/*"></label>
@@ -392,6 +419,9 @@ class DCK_Shortcodes {
 				// Back-compat with the old single-select field.
 				wp_set_post_terms( $post_id, array( absint( $_POST['service'] ) ), DCK_Post_Types::TAX_SERVICE );
 			}
+			if ( ! empty( $_POST['areas'] ) && is_array( $_POST['areas'] ) ) {
+				wp_set_post_terms( $post_id, array_map( 'absint', wp_unslash( $_POST['areas'] ) ), DCK_Post_Types::TAX_AREA );
+			}
 			$this->assign_location( $post_id, isset( $_POST['state'] ) ? sanitize_text_field( wp_unslash( $_POST['state'] ) ) : '', isset( $_POST['city'] ) ? sanitize_text_field( wp_unslash( $_POST['city'] ) ) : '' );
 		}
 
@@ -425,10 +455,12 @@ class DCK_Shortcodes {
 		$input = isset( $_POST['dck'] ) ? wp_unslash( $_POST['dck'] ) : array();
 		DCK_Fields::save( $post_id, $input );
 
-		// Categories.
-		if ( isset( $_POST['services'] ) && is_array( $_POST['services'] ) ) {
-			wp_set_post_terms( $post_id, array_map( 'absint', $_POST['services'] ), DCK_Post_Types::TAX_SERVICE );
-		}
+		// Coating systems + service areas. Send empty array to clear if none checked.
+		$svc = ( isset( $_POST['services'] ) && is_array( $_POST['services'] ) ) ? array_map( 'absint', wp_unslash( $_POST['services'] ) ) : array();
+		wp_set_post_terms( $post_id, $svc, DCK_Post_Types::TAX_SERVICE );
+		$area = ( isset( $_POST['areas'] ) && is_array( $_POST['areas'] ) ) ? array_map( 'absint', wp_unslash( $_POST['areas'] ) ) : array();
+		wp_set_post_terms( $post_id, $area, DCK_Post_Types::TAX_AREA );
+
 		// Location from city/state.
 		$this->assign_location(
 			$post_id,

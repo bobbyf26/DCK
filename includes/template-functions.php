@@ -118,7 +118,9 @@ function dck_render_card( $post_id ) {
 		$avg += isset( $r['rating'] ) ? (int) $r['rating'] : 0;
 	}
 	$avg      = $count ? round( $avg / $count, 1 ) : 0;
-	$cats     = wp_get_post_terms( $post_id, DCK_Post_Types::TAX_SERVICE, array( 'fields' => 'names' ) );
+	$svc_names  = wp_get_post_terms( $post_id, DCK_Post_Types::TAX_SERVICE, array( 'fields' => 'names' ) );
+	$area_names = wp_get_post_terms( $post_id, DCK_Post_Types::TAX_AREA, array( 'fields' => 'names' ) );
+	$cats     = array_merge( is_array( $svc_names ) ? $svc_names : array(), is_array( $area_names ) ? $area_names : array() );
 	$area     = dck_service_area_text( $post_id );
 	$thumb    = get_the_post_thumbnail_url( $post_id, 'medium' );
 
@@ -163,7 +165,10 @@ function dck_render_profile( $post_id ) {
 	$state   = get_post_meta( $post_id, '_dck_state', true );
 	$zip     = get_post_meta( $post_id, '_dck_zip', true );
 	$area    = dck_service_area_text( $post_id );
-	$cats    = wp_get_post_terms( $post_id, DCK_Post_Types::TAX_SERVICE, array( 'fields' => 'names' ) );
+	$systems = wp_get_post_terms( $post_id, DCK_Post_Types::TAX_SERVICE, array( 'fields' => 'names' ) );
+	$systems = is_array( $systems ) ? $systems : array();
+	$app_areas = wp_get_post_terms( $post_id, DCK_Post_Types::TAX_AREA, array( 'fields' => 'names' ) );
+	$app_areas = is_array( $app_areas ) ? $app_areas : array();
 	$logo    = get_the_post_thumbnail_url( $post_id, 'thumbnail' );
 
 	// Premium-gated data.
@@ -237,9 +242,10 @@ function dck_render_profile( $post_id ) {
 							<span class="dck-open-status" data-dck-hours='<?php echo esc_attr( wp_json_encode( $hours ) ); ?>'><b><?php esc_html_e( 'Hours', 'dck-directory' ); ?></b></span>
 						<?php endif; ?>
 					</div>
-					<?php if ( $cats ) : ?>
+					<?php if ( $systems || $app_areas ) : ?>
 					<div class="dck-chips">
-						<?php foreach ( $cats as $c ) : ?><span class="dck-chip"><?php echo esc_html( $c ); ?></span><?php endforeach; ?>
+						<?php foreach ( $systems as $c ) : ?><span class="dck-chip"><?php echo esc_html( $c ); ?></span><?php endforeach; ?>
+						<?php foreach ( $app_areas as $c ) : ?><span class="dck-chip dck-chip--plain"><?php echo esc_html( $c ); ?></span><?php endforeach; ?>
 					</div>
 					<?php endif; ?>
 				</div>

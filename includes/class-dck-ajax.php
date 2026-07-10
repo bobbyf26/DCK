@@ -35,6 +35,7 @@ class DCK_Ajax {
 		check_ajax_referer( 'dck_dir_nonce', 'nonce' );
 
 		$service  = isset( $_POST['service'] ) ? sanitize_title( wp_unslash( $_POST['service'] ) ) : '';
+		$area     = isset( $_POST['area'] ) ? sanitize_title( wp_unslash( $_POST['area'] ) ) : '';
 		$location = isset( $_POST['location'] ) ? sanitize_title( wp_unslash( $_POST['location'] ) ) : '';
 		$keyword  = isset( $_POST['keyword'] ) ? sanitize_text_field( wp_unslash( $_POST['keyword'] ) ) : '';
 		$paged    = isset( $_POST['paged'] ) ? max( 1, absint( $_POST['paged'] ) ) : 1;
@@ -45,6 +46,13 @@ class DCK_Ajax {
 				'taxonomy' => DCK_Post_Types::TAX_SERVICE,
 				'field'    => 'slug',
 				'terms'    => $service,
+			);
+		}
+		if ( $area ) {
+			$tax_query[] = array(
+				'taxonomy' => DCK_Post_Types::TAX_AREA,
+				'field'    => 'slug',
+				'terms'    => $area,
 			);
 		}
 		if ( $location ) {

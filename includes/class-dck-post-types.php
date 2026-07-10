@@ -12,7 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 class DCK_Post_Types {
 
 	const POST_TYPE   = 'dck_contractor';
-	const TAX_SERVICE = 'dck_service';
+	const TAX_SERVICE = 'dck_service';   // Coating systems (the finish/material).
+	const TAX_AREA    = 'dck_area';      // Service areas / applications.
 	const TAX_LOCATION = 'dck_location';
 
 	private static $instance = null;
@@ -58,21 +59,39 @@ class DCK_Post_Types {
 			)
 		);
 
-		// Service categories (Stamped, Stained, Garage Floors, ...).
+		// Coating systems (Epoxy, Metallic, Polished, Stamped, ...).
 		register_taxonomy(
 			self::TAX_SERVICE,
 			self::POST_TYPE,
 			array(
 				'labels'            => array(
-					'name'          => __( 'Service Categories', 'dck-directory' ),
-					'singular_name' => __( 'Service Category', 'dck-directory' ),
-					'menu_name'     => __( 'Categories', 'dck-directory' ),
+					'name'          => __( 'Coating Systems', 'dck-directory' ),
+					'singular_name' => __( 'Coating System', 'dck-directory' ),
+					'menu_name'     => __( 'Coating Systems', 'dck-directory' ),
 				),
 				'hierarchical'      => true,
 				'public'            => true,
 				'show_admin_column' => true,
 				'show_in_rest'      => true,
-				'rewrite'           => array( 'slug' => 'concrete-service', 'with_front' => false ),
+				'rewrite'           => array( 'slug' => 'coating-system', 'with_front' => false ),
+			)
+		);
+
+		// Service areas / applications (Garage Floors, Patios, Commercial, ...).
+		register_taxonomy(
+			self::TAX_AREA,
+			self::POST_TYPE,
+			array(
+				'labels'            => array(
+					'name'          => __( 'Service Areas', 'dck-directory' ),
+					'singular_name' => __( 'Service Area', 'dck-directory' ),
+					'menu_name'     => __( 'Service Areas', 'dck-directory' ),
+				),
+				'hierarchical'      => true,
+				'public'            => true,
+				'show_admin_column' => true,
+				'show_in_rest'      => true,
+				'rewrite'           => array( 'slug' => 'application-area', 'with_front' => false ),
 			)
 		);
 
@@ -115,23 +134,46 @@ class DCK_Post_Types {
 	}
 
 	/**
-	 * Seed the 9 service categories from the live site on first activation.
+	 * Seed default terms for both taxonomies on first activation.
+	 * Only inserts terms that don't already exist, so it's safe to re-run.
 	 */
 	public function seed_default_services() {
-		$defaults = array(
-			'Basement Waterproofing',
-			'Concrete Wood',
-			'Garage Floors',
+		$coating_systems = array(
+			'Epoxy Coatings',
+			'Polyaspartic / Polyurea',
+			'Flake / Chip System',
+			'Quartz System',
 			'Metallic Marble',
-			'Patios & Pool Decks',
 			'Polished Concrete',
-			'Protect & Seal',
 			'Stained Concrete',
 			'Stamped Concrete',
+			'Concrete Overlays',
+			'Concrete Wood',
+			'Protect & Seal',
+			'Basement Waterproofing',
 		);
-		foreach ( $defaults as $name ) {
+		foreach ( $coating_systems as $name ) {
 			if ( ! term_exists( $name, self::TAX_SERVICE ) ) {
 				wp_insert_term( $name, self::TAX_SERVICE );
+			}
+		}
+
+		$service_areas = array(
+			'Garage Floors',
+			'Patios',
+			'Pool Decks',
+			'Driveways',
+			'Walkways & Sidewalks',
+			'Basements',
+			'Interior Floors',
+			'Commercial',
+			'Industrial',
+			'Warehouses',
+			'Retail Spaces',
+		);
+		foreach ( $service_areas as $name ) {
+			if ( ! term_exists( $name, self::TAX_AREA ) ) {
+				wp_insert_term( $name, self::TAX_AREA );
 			}
 		}
 	}

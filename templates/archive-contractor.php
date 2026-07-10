@@ -17,7 +17,7 @@ $title = __( 'Contractors', 'dck-directory' );
 if ( $term instanceof WP_Term ) {
 	if ( DCK_Post_Types::TAX_LOCATION === $term->taxonomy ) {
 		$title = sprintf( __( 'Decorative concrete contractors in %s', 'dck-directory' ), $term->name );
-	} elseif ( DCK_Post_Types::TAX_SERVICE === $term->taxonomy ) {
+	} elseif ( DCK_Post_Types::TAX_SERVICE === $term->taxonomy || DCK_Post_Types::TAX_AREA === $term->taxonomy ) {
 		$title = sprintf( __( '%s contractors', 'dck-directory' ), $term->name );
 	}
 }
