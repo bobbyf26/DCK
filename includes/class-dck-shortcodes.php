@@ -156,15 +156,16 @@ class DCK_Shortcodes {
 						<label><?php esc_html_e( 'Email (your login)', 'dck-directory' ); ?><input type="email" name="email" required></label>
 						<label><?php esc_html_e( 'Password', 'dck-directory' ); ?><input type="password" name="password" required minlength="8"></label>
 						<label><?php esc_html_e( 'Phone', 'dck-directory' ); ?><input type="tel" name="phone" required></label>
-						<label><?php esc_html_e( 'Category', 'dck-directory' ); ?>
-							<select name="service">
-								<?php foreach ( $services as $t ) : ?><option value="<?php echo (int) $t->term_id; ?>"><?php echo esc_html( $t->name ); ?></option><?php endforeach; ?>
-							</select>
-						</label>
 						<label><?php esc_html_e( 'Street address', 'dck-directory' ); ?><input type="text" name="address"></label>
 						<label><?php esc_html_e( 'City', 'dck-directory' ); ?><input type="text" name="city" required></label>
 						<label><?php esc_html_e( 'State', 'dck-directory' ); ?><input type="text" name="state" required></label>
 						<label><?php esc_html_e( 'ZIP', 'dck-directory' ); ?><input type="text" name="zip"></label>
+					</div>
+					<label><?php esc_html_e( 'Categories (select all that apply)', 'dck-directory' ); ?></label>
+					<div class="dck-checks">
+						<?php foreach ( $services as $t ) : ?>
+							<label class="dck-check"><input type="checkbox" name="services[]" value="<?php echo (int) $t->term_id; ?>"> <?php echo esc_html( $t->name ); ?></label>
+						<?php endforeach; ?>
 					</div>
 					<label class="dck-check"><input type="checkbox" name="terms" required> <?php esc_html_e( 'I confirm I represent this business.', 'dck-directory' ); ?></label>
 					<button class="dck-btn" type="submit"><?php esc_html_e( 'Create free listing', 'dck-directory' ); ?></button>
@@ -385,7 +386,10 @@ class DCK_Shortcodes {
 					update_post_meta( $post_id, '_dck_' . $f, sanitize_text_field( wp_unslash( $_POST[ $f ] ) ) );
 				}
 			}
-			if ( ! empty( $_POST['service'] ) ) {
+			if ( ! empty( $_POST['services'] ) && is_array( $_POST['services'] ) ) {
+				wp_set_post_terms( $post_id, array_map( 'absint', wp_unslash( $_POST['services'] ) ), DCK_Post_Types::TAX_SERVICE );
+			} elseif ( ! empty( $_POST['service'] ) ) {
+				// Back-compat with the old single-select field.
 				wp_set_post_terms( $post_id, array( absint( $_POST['service'] ) ), DCK_Post_Types::TAX_SERVICE );
 			}
 			$this->assign_location( $post_id, isset( $_POST['state'] ) ? sanitize_text_field( wp_unslash( $_POST['state'] ) ) : '', isset( $_POST['city'] ) ? sanitize_text_field( wp_unslash( $_POST['city'] ) ) : '' );
