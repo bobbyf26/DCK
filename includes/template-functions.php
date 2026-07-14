@@ -11,6 +11,34 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Lighten or darken a hex color. Positive percent lightens toward white,
+ * negative darkens toward black. Used to derive brand shades from one color.
+ *
+ * @param string $hex     e.g. "#1E62B4".
+ * @param int    $percent -100..100.
+ * @return string Hex color.
+ */
+function dck_adjust_hex( $hex, $percent ) {
+	$hex = ltrim( (string) $hex, '#' );
+	if ( 3 === strlen( $hex ) ) {
+		$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+	}
+	if ( 6 !== strlen( $hex ) ) {
+		return '#' . $hex;
+	}
+	$r = hexdec( substr( $hex, 0, 2 ) );
+	$g = hexdec( substr( $hex, 2, 2 ) );
+	$b = hexdec( substr( $hex, 4, 2 ) );
+	$adjust = function ( $c ) use ( $percent ) {
+		if ( $percent < 0 ) {
+			return max( 0, (int) round( $c * ( 1 + $percent / 100 ) ) );
+		}
+		return min( 255, (int) round( $c + ( 255 - $c ) * ( $percent / 100 ) ) );
+	};
+	return sprintf( '#%02x%02x%02x', $adjust( $r ), $adjust( $g ), $adjust( $b ) );
+}
+
+/**
  * SVG star row for a given rating (0–5, halves rounded to nearest).
  */
 function dck_stars_html( $rating, $size = 17 ) {
@@ -256,14 +284,14 @@ function dck_render_profile( $post_id ) {
 
 					<?php if ( trim( wp_strip_all_tags( $about ) ) ) : ?>
 					<section class="dck-card">
-						<h2><?php esc_html_e( 'About this contractor', 'dck-directory' ); ?></h2>
+						<h2><?php echo esc_html( dck_setting( 'profile_about_heading' ) ); ?></h2>
 						<?php echo wp_kses_post( $about ); ?>
 					</section>
 					<?php endif; ?>
 
 					<?php if ( $premium && $services ) : ?>
 					<section class="dck-card">
-						<h2><?php esc_html_e( 'Services offered', 'dck-directory' ); ?></h2>
+						<h2><?php echo esc_html( dck_setting( 'profile_services_heading' ) ); ?></h2>
 						<ul class="dck-svc-grid">
 							<?php foreach ( $services as $s ) : ?>
 							<li><svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg><?php echo esc_html( $s ); ?></li>
@@ -274,7 +302,7 @@ function dck_render_profile( $post_id ) {
 
 					<?php if ( $premium && $count ) : ?>
 					<section class="dck-card" id="dck-reviews">
-						<h2><?php esc_html_e( 'Reviews', 'dck-directory' ); ?></h2>
+						<h2><?php echo esc_html( dck_setting( 'profile_reviews_heading' ) ); ?></h2>
 						<div class="dck-rev-summary">
 							<div class="dck-rev-big">
 								<b><?php echo esc_html( $avg ); ?></b>
@@ -309,7 +337,7 @@ function dck_render_profile( $post_id ) {
 					$area_cities = $premium ? array_filter( array_map( 'trim', explode( ',', (string) DCK_Fields::get( $post_id, 'service_area' ) ) ) ) : array();
 					if ( $premium && $area_cities ) : ?>
 					<section class="dck-card">
-						<h2><?php esc_html_e( 'Service area', 'dck-directory' ); ?></h2>
+						<h2><?php echo esc_html( dck_setting( 'profile_area_heading' ) ); ?></h2>
 						<div class="dck-area-cities">
 							<?php foreach ( $area_cities as $c ) : ?><span class="dck-chip dck-chip--plain"><?php echo esc_html( $c ); ?></span><?php endforeach; ?>
 						</div>
@@ -332,7 +360,7 @@ function dck_render_profile( $post_id ) {
 					}
 					if ( $has_details ) : ?>
 					<section class="dck-card">
-						<h2><?php esc_html_e( 'Credentials & business details', 'dck-directory' ); ?></h2>
+						<h2><?php echo esc_html( dck_setting( 'profile_credentials_heading' ) ); ?></h2>
 						<div class="dck-details">
 							<?php foreach ( $details as $k => $l ) :
 								$v = DCK_Fields::get( $post_id, $k );
@@ -345,7 +373,7 @@ function dck_render_profile( $post_id ) {
 
 					<?php if ( $premium && $faq ) : ?>
 					<section class="dck-card">
-						<h2><?php esc_html_e( 'Frequently asked questions', 'dck-directory' ); ?></h2>
+						<h2><?php echo esc_html( dck_setting( 'profile_faq_heading' ) ); ?></h2>
 						<?php foreach ( $faq as $f ) : ?>
 						<details class="dck-faq">
 							<summary><?php echo esc_html( $f['q'] ); ?></summary>
@@ -359,7 +387,7 @@ function dck_render_profile( $post_id ) {
 
 				<aside class="dck-side">
 					<section class="dck-card dck-cta-card">
-						<h2><?php esc_html_e( 'Request a free quote', 'dck-directory' ); ?></h2>
+						<h2><?php echo esc_html( dck_setting( 'profile_quote_heading' ) ); ?></h2>
 						<?php $resp = $premium ? DCK_Fields::get( $post_id, 'response_time' ) : ''; ?>
 						<?php if ( $resp ) : ?><div class="dck-responds"><span class="dck-pulse"></span><?php echo esc_html( sprintf( __( 'Typically responds within %s', 'dck-directory' ), $resp ) ); ?></div><?php endif; ?>
 						<form class="dck-quote" data-dck-lead>
@@ -368,7 +396,7 @@ function dck_render_profile( $post_id ) {
 							<div><label><?php esc_html_e( 'Phone', 'dck-directory' ); ?></label><input type="tel" name="phone" required></div>
 							<div><label><?php esc_html_e( 'Email', 'dck-directory' ); ?></label><input type="email" name="email"></div>
 							<div><label><?php esc_html_e( 'Project details', 'dck-directory' ); ?></label><textarea name="message" placeholder="<?php esc_attr_e( 'Approx. size, timeline, anything else…', 'dck-directory' ); ?>"></textarea></div>
-							<button class="dck-btn" type="submit"><?php esc_html_e( 'Get my free quote', 'dck-directory' ); ?></button>
+							<button class="dck-btn" type="submit"><?php echo esc_html( dck_setting( 'profile_quote_button' ) ); ?></button>
 							<p class="dck-form-msg" role="status" aria-live="polite"></p>
 						</form>
 						<p class="dck-fine"><?php esc_html_e( 'Free • No obligation', 'dck-directory' ); ?></p>

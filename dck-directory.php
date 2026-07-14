@@ -3,7 +3,7 @@
  * Plugin Name:       DCK Directory
  * Plugin URI:        https://github.com/bobbyf26/DCK
  * Description:        Decorative concrete contractor directory — searchable landing page, contractor profiles, free front-end signup, and paid premium listings.
- * Version:           1.1.2
+ * Version:           1.2.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Decorative Concrete Kingdom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // No direct access.
 }
 
-define( 'DCK_DIR_VERSION', '1.1.2' );
+define( 'DCK_DIR_VERSION', '1.2.0' );
 define( 'DCK_DIR_FILE', __FILE__ );
 define( 'DCK_DIR_PATH', plugin_dir_path( __FILE__ ) );
 define( 'DCK_DIR_URL', plugin_dir_url( __FILE__ ) );
@@ -25,6 +25,7 @@ define( 'DCK_DIR_URL', plugin_dir_url( __FILE__ ) );
 require_once DCK_DIR_PATH . 'includes/template-functions.php';
 require_once DCK_DIR_PATH . 'includes/class-dck-post-types.php';
 require_once DCK_DIR_PATH . 'includes/class-dck-fields.php';
+require_once DCK_DIR_PATH . 'includes/class-dck-settings.php';
 require_once DCK_DIR_PATH . 'includes/class-dck-admin.php';
 require_once DCK_DIR_PATH . 'includes/class-dck-ajax.php';
 require_once DCK_DIR_PATH . 'includes/class-dck-shortcodes.php';
@@ -36,6 +37,7 @@ require_once DCK_DIR_PATH . 'includes/class-dck-templates.php';
 function dck_directory_init() {
 	DCK_Post_Types::instance();
 	DCK_Fields::instance();
+	DCK_Settings::instance();
 	DCK_Admin::instance();
 	DCK_Ajax::instance();
 	DCK_Shortcodes::instance();
@@ -60,6 +62,20 @@ function dck_directory_assets() {
 	// Enqueued globally so shortcodes and single profiles are always styled.
 	wp_enqueue_style( 'dck-directory' );
 	wp_enqueue_script( 'dck-directory' );
+
+	// Apply the admin-chosen brand color by overriding the CSS tokens.
+	$brand = DCK_Settings::get( 'brand_color' );
+	if ( $brand && '#1E62B4' !== strtoupper( $brand ) ) {
+		$deep = dck_adjust_hex( $brand, -30 );
+		$soft = dck_adjust_hex( $brand, 88 );
+		$css  = sprintf(
+			'.dck-profile,.dck-directory-page,.dck-form-page{--dck-brand:%1$s;--dck-brand-deep:%2$s;--dck-brand-soft:%3$s;}',
+			esc_html( $brand ),
+			esc_html( $deep ),
+			esc_html( $soft )
+		);
+		wp_add_inline_style( 'dck-directory', $css );
+	}
 }
 add_action( 'wp_enqueue_scripts', 'dck_directory_assets' );
 

@@ -48,8 +48,8 @@ class DCK_Shortcodes {
 		<div class="dck-directory-page" data-dck-directory>
 			<div class="dck-wrap">
 				<div class="dck-hero">
-					<h1><?php esc_html_e( 'Find a decorative concrete pro near you', 'dck-directory' ); ?></h1>
-					<p><?php esc_html_e( 'Browse verified contractors for stamped, stained, epoxy, and polished concrete.', 'dck-directory' ); ?></p>
+					<h1><?php echo esc_html( dck_setting( 'hero_title' ) ); ?></h1>
+					<p><?php echo esc_html( dck_setting( 'hero_subtitle' ) ); ?></p>
 					<form class="dck-searchbar" data-dck-search>
 						<div class="dck-field">
 							<label><?php esc_html_e( 'Coating system', 'dck-directory' ); ?></label>
@@ -82,13 +82,13 @@ class DCK_Shortcodes {
 							<label><?php esc_html_e( 'Keyword / city', 'dck-directory' ); ?></label>
 							<input type="text" name="keyword" data-search-keyword placeholder="<?php esc_attr_e( 'e.g. patio, city name…', 'dck-directory' ); ?>">
 						</div>
-						<button type="submit" class="dck-btn"><?php esc_html_e( 'Search', 'dck-directory' ); ?></button>
+						<button type="submit" class="dck-btn"><?php echo esc_html( dck_setting( 'search_button' ) ); ?></button>
 					</form>
 				</div>
 
 				<?php if ( ! empty( $services ) && ! is_wp_error( $services ) ) : ?>
-				<section class="dck-tiles" aria-label="<?php esc_attr_e( 'Browse by coating system', 'dck-directory' ); ?>">
-					<h2><?php esc_html_e( 'Browse by coating system', 'dck-directory' ); ?></h2>
+				<section class="dck-tiles" aria-label="<?php echo esc_attr( dck_setting( 'systems_heading' ) ); ?>">
+					<h2><?php echo esc_html( dck_setting( 'systems_heading' ) ); ?></h2>
 					<div class="dck-tiles__grid">
 						<?php foreach ( $services as $t ) : ?>
 							<button type="button" class="dck-tile" data-service="<?php echo esc_attr( $t->slug ); ?>">
@@ -102,7 +102,7 @@ class DCK_Shortcodes {
 
 				<section class="dck-results-wrap">
 					<div class="dck-results-head">
-						<h2 data-results-title><?php esc_html_e( 'Contractors', 'dck-directory' ); ?></h2>
+						<h2 data-results-title><?php echo esc_html( dck_setting( 'results_heading' ) ); ?></h2>
 						<span data-results-count></span>
 					</div>
 					<div class="dck-results" data-results aria-live="polite"></div>
@@ -112,7 +112,7 @@ class DCK_Shortcodes {
 
 				<?php if ( ! empty( $states ) && ! is_wp_error( $states ) ) : ?>
 				<section class="dck-states">
-					<h2><?php esc_html_e( 'Browse by state', 'dck-directory' ); ?></h2>
+					<h2><?php echo esc_html( dck_setting( 'states_heading' ) ); ?></h2>
 					<div class="dck-states__grid">
 						<?php foreach ( $states as $t ) : ?>
 							<a href="<?php echo esc_url( get_term_link( $t ) ); ?>"><?php echo esc_html( $t->name ); ?> <span>(<?php echo (int) $t->count; ?>)</span></a>
@@ -123,10 +123,10 @@ class DCK_Shortcodes {
 
 				<div class="dck-cta-strip">
 					<div>
-						<strong><?php esc_html_e( 'Are you a contractor?', 'dck-directory' ); ?></strong>
-						<span><?php esc_html_e( 'List your business free in minutes.', 'dck-directory' ); ?></span>
+						<strong><?php echo esc_html( dck_setting( 'cta_title' ) ); ?></strong>
+						<span><?php echo esc_html( dck_setting( 'cta_subtitle' ) ); ?></span>
 					</div>
-					<a class="dck-btn" href="<?php echo esc_url( dck_signup_url() ); ?>"><?php esc_html_e( 'Add your free listing', 'dck-directory' ); ?></a>
+					<a class="dck-btn" href="<?php echo esc_url( dck_signup_url() ); ?>"><?php echo esc_html( dck_setting( 'cta_button' ) ); ?></a>
 				</div>
 			</div>
 		</div>
@@ -156,37 +156,37 @@ class DCK_Shortcodes {
 		?>
 		<div class="dck-form-page">
 			<div class="dck-wrap dck-narrow">
-				<h1><?php esc_html_e( 'Add your free listing', 'dck-directory' ); ?></h1>
-				<p class="dck-muted"><?php esc_html_e( 'Free listings include your business name, address, phone, and category. Upgrade anytime for photos, reviews, and more.', 'dck-directory' ); ?></p>
+				<h1><?php echo esc_html( dck_setting( 'signup_title' ) ); ?></h1>
+				<p class="dck-muted"><?php echo esc_html( dck_setting( 'signup_intro' ) ); ?></p>
 				<?php echo $notice; // phpcs:ignore ?>
 				<form method="post" class="dck-stack">
 					<?php wp_nonce_field( 'dck_signup', 'dck_signup_nonce' ); ?>
 					<input type="hidden" name="dck_action" value="signup">
 					<div class="dck-grid2">
-						<label><?php esc_html_e( 'Business name', 'dck-directory' ); ?><input type="text" name="business" required></label>
-						<label><?php esc_html_e( 'Your name', 'dck-directory' ); ?><input type="text" name="fullname" required></label>
-						<label><?php esc_html_e( 'Email (your login)', 'dck-directory' ); ?><input type="email" name="email" required></label>
-						<label><?php esc_html_e( 'Password', 'dck-directory' ); ?><input type="password" name="password" required minlength="8"></label>
-						<label><?php esc_html_e( 'Phone', 'dck-directory' ); ?><input type="tel" name="phone" required></label>
-						<label><?php esc_html_e( 'Street address', 'dck-directory' ); ?><input type="text" name="address"></label>
-						<label><?php esc_html_e( 'City', 'dck-directory' ); ?><input type="text" name="city" required></label>
-						<label><?php esc_html_e( 'State', 'dck-directory' ); ?><input type="text" name="state" required></label>
-						<label><?php esc_html_e( 'ZIP', 'dck-directory' ); ?><input type="text" name="zip"></label>
+						<label><?php echo esc_html( dck_setting( 'label_business' ) ); ?><input type="text" name="business" required></label>
+						<label><?php echo esc_html( dck_setting( 'label_fullname' ) ); ?><input type="text" name="fullname" required></label>
+						<label><?php echo esc_html( dck_setting( 'label_email' ) ); ?><input type="email" name="email" required></label>
+						<label><?php echo esc_html( dck_setting( 'label_password' ) ); ?><input type="password" name="password" required minlength="8"></label>
+						<label><?php echo esc_html( dck_setting( 'label_phone' ) ); ?><input type="tel" name="phone" required></label>
+						<?php if ( dck_setting_on( 'show_address' ) ) : ?><label><?php echo esc_html( dck_setting( 'label_address' ) ); ?><input type="text" name="address"></label><?php endif; ?>
+						<label><?php echo esc_html( dck_setting( 'label_city' ) ); ?><input type="text" name="city" required></label>
+						<label><?php echo esc_html( dck_setting( 'label_state' ) ); ?><input type="text" name="state" required></label>
+						<?php if ( dck_setting_on( 'show_zip' ) ) : ?><label><?php echo esc_html( dck_setting( 'label_zip' ) ); ?><input type="text" name="zip"></label><?php endif; ?>
 					</div>
-					<label><?php esc_html_e( 'Coating systems you offer (select all that apply)', 'dck-directory' ); ?></label>
+					<label><?php echo esc_html( dck_setting( 'signup_systems_label' ) ); ?></label>
 					<div class="dck-checks">
 						<?php foreach ( $services as $t ) : ?>
 							<label class="dck-check"><input type="checkbox" name="services[]" value="<?php echo (int) $t->term_id; ?>"> <?php echo esc_html( $t->name ); ?></label>
 						<?php endforeach; ?>
 					</div>
-					<label><?php esc_html_e( 'Service areas / applications (select all that apply)', 'dck-directory' ); ?></label>
+					<label><?php echo esc_html( dck_setting( 'signup_areas_label' ) ); ?></label>
 					<div class="dck-checks">
 						<?php foreach ( $areas as $t ) : ?>
 							<label class="dck-check"><input type="checkbox" name="areas[]" value="<?php echo (int) $t->term_id; ?>"> <?php echo esc_html( $t->name ); ?></label>
 						<?php endforeach; ?>
 					</div>
-					<label class="dck-check"><input type="checkbox" name="terms" required> <?php esc_html_e( 'I confirm I represent this business.', 'dck-directory' ); ?></label>
-					<button class="dck-btn" type="submit"><?php esc_html_e( 'Create free listing', 'dck-directory' ); ?></button>
+					<label class="dck-check"><input type="checkbox" name="terms" required> <?php echo esc_html( dck_setting( 'terms_text' ) ); ?></label>
+					<button class="dck-btn" type="submit"><?php echo esc_html( dck_setting( 'signup_button' ) ); ?></button>
 					<p class="dck-muted dck-small"><?php printf( wp_kses_post( __( 'Already registered? <a href="%s">Log in</a>.', 'dck-directory' ) ), esc_url( wp_login_url( dck_dashboard_url() ) ) ); ?></p>
 				</form>
 			</div>
@@ -241,7 +241,7 @@ class DCK_Shortcodes {
 		<div class="dck-form-page dck-dashboard">
 			<div class="dck-wrap">
 				<div class="dck-dash-head">
-					<h1><?php esc_html_e( 'Manage your listing', 'dck-directory' ); ?></h1>
+					<h1><?php echo esc_html( dck_setting( 'dash_title' ) ); ?></h1>
 					<div class="dck-dash-status">
 						<?php if ( 'publish' === $listing->post_status ) : ?>
 							<a href="<?php echo esc_url( get_permalink( $post_id ) ); ?>" target="_blank"><?php esc_html_e( 'View live profile ↗', 'dck-directory' ); ?></a>
@@ -264,7 +264,7 @@ class DCK_Shortcodes {
 
 				<?php if ( ! $premium ) : ?>
 				<div class="dck-upgrade-banner">
-					<div><strong><?php esc_html_e( 'You are on the free plan.', 'dck-directory' ); ?></strong> <?php esc_html_e( 'Premium unlocks photos, reviews, hours, website & social links, and featured placement.', 'dck-directory' ); ?></div>
+					<div><strong><?php esc_html_e( 'You are on the free plan.', 'dck-directory' ); ?></strong> <?php echo esc_html( dck_setting( 'dash_upgrade_text' ) ); ?></div>
 					<form method="post" style="margin:0">
 						<?php wp_nonce_field( 'dck_upgrade', 'dck_upgrade_nonce' ); ?>
 						<input type="hidden" name="dck_action" value="request_upgrade">
@@ -336,7 +336,7 @@ class DCK_Shortcodes {
 					</section>
 
 					<div class="dck-save-bar">
-						<button class="dck-btn" type="submit"><?php esc_html_e( 'Save changes', 'dck-directory' ); ?></button>
+						<button class="dck-btn" type="submit"><?php echo esc_html( dck_setting( 'dash_save_button' ) ); ?></button>
 					</div>
 				</form>
 			</div>

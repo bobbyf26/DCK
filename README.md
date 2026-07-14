@@ -61,6 +61,25 @@ The plugin remembers which page holds each shortcode, so all internal links
 - **Leads** — quote-form submissions are stored under **DCK Directory → Leads**
   and emailed to the contractor (premium) or the site admin.
 
+## Editing the pages (no code, no re-upload)
+
+Go to **DCK Directory → Settings** to change, right from wp-admin:
+
+- **Branding** — the brand color (buttons, links, chips, accents); deep/soft
+  shades are derived automatically.
+- **Directory / search page** — hero heading + subtext, search button, the
+  "Browse by…" and results headings, and the "Are you a contractor?" CTA.
+- **Signup form** — page heading, intro, every field label, the two category
+  section labels, the consent text, the submit button, and toggles to show/hide
+  the optional Street address and ZIP fields.
+- **Owner dashboard** — heading, upgrade banner text, save button.
+- **Contractor profile** — every section heading and the quote form heading/button.
+
+The category options themselves are term lists you manage under **Coating
+Systems** and **Service Areas**. Together this means day-to-day wording, labels,
+fields, colors, and categories are all editable in the dashboard — no need to
+edit code or re-upload the plugin. (Structural layout still lives in code.)
+
 ## Managing plans (billing deferred)
 
 Premium tiers are fully built; payment collection is **manual for now**. When a
