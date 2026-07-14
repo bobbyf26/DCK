@@ -296,3 +296,47 @@ a.dck-card:hover { border-color: var(--dck-brand); transform: translateY(-2px); 
 @media (max-width: 640px) { .dck-grid2 { grid-template-columns: 1fr; } }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* ============================================================
+   SITE CHROME (appended) — paste at the END of
+   wp-content/plugins/DCK-main/assets/css/dck-directory.css
+   via Plugins -> Plugin File Editor. Covers ALL plugin pages
+   including contractor profiles and location archives.
+============================================================ */
+
+/* monochrome palette (black/white/gray, blue reserved for accents) */
+.dck-profile, .dck-directory-page, .dck-form-page { --dck-brand: #111111; --dck-brand-deep: #000000; --dck-brand-soft: #EFEFEF; --dck-ink: #111111; --dck-muted: #6B6B6B; --dck-line: #E3E3E3; --dck-ground: #F6F6F6; --dck-shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.08); }
+body { background: #F5F5F5; }
+
+/* auth nav button: Login (logged out) / My Account (logged in) */
+body:not(.logged-in) .dck-nav-account { display: none !important; }
+body.logged-in .dck-nav-login { display: none !important; }
+.dck-nav-btn { margin-left: 10px; }
+.dck-nav-btn a, li.dck-nav-btn > a { display: inline-block; background: #111111 !important; color: #ffffff !important; border-radius: 999px; padding: 8px 18px; font-weight: 700 !important; }
+.dck-nav-btn a span, .dck-nav-btn a div, .dck-nav-btn a * { color: #ffffff !important; font-weight: 700 !important; }
+.dck-nav-btn a *, .dck-nav-btn a:hover *, .dck-nav-btn a:focus * { background: transparent !important; box-shadow: none !important; }
+.dck-nav-btn a { transition: transform .15s ease, box-shadow .2s ease, background .15s ease; }
+.dck-nav-btn a:hover, .dck-nav-btn a:focus { background: linear-gradient(120deg, #1E62B4, #14406F) !important; color: #ffffff !important; text-decoration: none; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.35); }
+
+/* dark header (class added by the JS append) */
+.dckx-dark-header { background: linear-gradient(120deg, #000000, #1C1C1C 70%, #14406F 170%) !important; border: 0 !important; box-shadow: 0 2px 12px rgba(0,0,0,.3); }
+.dckx-dark-header > div, .dckx-dark-header nav, .dckx-dark-header ul { border: 0 !important; }
+.dckx-dark-header a, .dckx-dark-header a span, .dckx-dark-header a div, .dckx-dark-header a * { color: #ffffff !important; font-weight: 600 !important; }
+.dckx-dark-header a:hover, .dckx-dark-header a:hover *, .dckx-dark-header a:focus * { color: #CFE0F5 !important; }
+.dckx-dark-header li:not(.dck-nav-btn) a, .dckx-dark-header li:not(.dck-nav-btn) a *, .dckx-dark-header li:not(.dck-nav-btn) a:hover, .dckx-dark-header li:not(.dck-nav-btn) a:hover *, .dckx-dark-header li:not(.dck-nav-btn) a:focus, .dckx-dark-header li:not(.dck-nav-btn) a:focus * { background: transparent !important; box-shadow: none !important; }
+.dckx-dark-header li:not(.dck-nav-btn) a { transition: color .15s ease, transform .15s ease; }
+.dckx-dark-header li:not(.dck-nav-btn) a:hover, .dckx-dark-header li:not(.dck-nav-btn) a:hover * { color: #7FB2E5 !important; }
+.dckx-dark-header li:not(.dck-nav-btn) a:hover { transform: translateY(-1px); text-decoration: underline !important; text-underline-offset: 8px; text-decoration-thickness: 2px; text-decoration-color: #1E62B4; }
+.dckx-dark-header .dck-nav-btn a { background: #ffffff !important; }
+.dckx-dark-header .dck-nav-btn a, .dckx-dark-header .dck-nav-btn a * { color: #111111 !important; }
+.dckx-dark-header .dck-nav-btn a:hover { background: #E7EFF9 !important; }
+.dckx-dark-header img[alt="Decorative Concrete Kingdom"] { background: none !important; padding: 0 !important; }
+.dckx-dark-header button, .dckx-dark-header svg { color: #ffffff !important; fill: #ffffff !important; }
+
+/* contractor profile: hide the service/area chip wall under the name */
+.dck-profile .dck-chips { display: none; }
+
+/* contractor profile: hide the theme's duplicate title, byline, and featured image echo */
+.single-dck_contractor h1 { display: none !important; }
+.single-dck_contractor .dck-profile h1 { display: block !important; }
+.single-dck_contractor [class*="meta" i], .single-dck_contractor [class*="byline" i], .single-dck_contractor article time, .single-dck_contractor [rel="author"] { display: none !important; }
+.single-dck_contractor .post-thumbnail, .single-dck_contractor [class*="featured" i], .single-dck_contractor article > figure { display: none !important; }

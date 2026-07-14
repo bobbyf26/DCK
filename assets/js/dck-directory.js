@@ -166,3 +166,18 @@
 		initDirectory();
 	} );
 })();
+/* SITE CHROME (appended) — swap site-title text for the DCK logo and
+   mark the header dark on every page, including contractor profiles. */
+(function(){
+	var hls = document.querySelectorAll('header a');
+	for (var i = 0; i < hls.length; i++) {
+		if (hls[i].textContent.trim() === 'DCK 2.0') {
+			hls[i].innerHTML = '<img src="https://decorativeconcretekingdom.com/wp-content/uploads/2021/03/new-dck-logo-500.png" alt="Decorative Concrete Kingdom" style="height:54px;width:auto;display:block">';
+		}
+	}
+	var lg = document.querySelector('img[alt="Decorative Concrete Kingdom"]');
+	if (lg) {
+		var hd = lg.closest('header');
+		if (hd) hd.classList.add('dckx-dark-header');
+	}
+})();
