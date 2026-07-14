@@ -336,7 +336,7 @@ body.logged-in .dck-nav-login { display: none !important; }
 .dck-profile .dck-chips { display: none; }
 
 /* contractor profile: hide the theme's duplicate title, byline, and featured image echo */
-.single-dck_contractor h1 { display: none !important; }
-.single-dck_contractor .dck-profile h1 { display: block !important; }
-.single-dck_contractor [class*="meta" i], .single-dck_contractor [class*="byline" i], .single-dck_contractor article time, .single-dck_contractor [rel="author"] { display: none !important; }
-.single-dck_contractor .post-thumbnail, .single-dck_contractor [class*="featured" i], .single-dck_contractor article > figure { display: none !important; }
+
+/* contractor profile: hide theme post header (duplicate title + byline) and featured image echo */
+.single-dck_contractor article > header { display: none !important; }
+.single-dck_contractor article > figure, .single-dck_contractor .post-thumbnail { display: none !important; }
