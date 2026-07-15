@@ -36,7 +36,8 @@ class DCK_Shortcodes {
 		dck_remember_page( 'directory' );
 		$services = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_SERVICE, 'hide_empty' => false ) );
 		$areas    = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_AREA, 'hide_empty' => false ) );
-		$states   = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_LOCATION, 'parent' => 0, 'hide_empty' => false ) );
+		// Only states that actually have published contractors (no empty (0) states).
+		$states   = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_LOCATION, 'parent' => 0, 'hide_empty' => true ) );
 
 		// Pre-selected from query string (e.g. category tile links).
 		$sel_service  = isset( $_GET['service'] ) ? sanitize_title( wp_unslash( $_GET['service'] ) ) : '';

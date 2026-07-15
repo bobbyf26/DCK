@@ -31,6 +31,72 @@ class DCK_Settings {
 		add_action( 'admin_menu', array( $this, 'menu' ) );
 		add_action( 'admin_init', array( $this, 'maybe_save' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'assets' ) );
+		add_action( 'rest_api_init', array( $this, 'register_rest' ) );
+	}
+
+	/**
+	 * Expose the settings option over the REST API so it can be read/written
+	 * at /wp/v2/settings (requires manage_options — i.e. an admin app password).
+	 * Partial updates merge over existing values so one key doesn't wipe the rest.
+	 */
+	public function register_rest() {
+		register_setting(
+			'options',
+			self::OPTION,
+			array(
+				'type'              => 'object',
+				'sanitize_callback' => array( __CLASS__, 'sanitize_rest' ),
+				'show_in_rest'      => array(
+					'schema' => array(
+						'type'                 => 'object',
+						'additionalProperties' => array( 'type' => 'string' ),
+					),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Sanitize + merge an incoming (possibly partial) settings object from REST.
+	 */
+	public static function sanitize_rest( $value ) {
+		$in       = is_array( $value ) ? $value : array();
+		$existing = get_option( self::OPTION, array() );
+		$existing = is_array( $existing ) ? $existing : array();
+		$flat     = array();
+		foreach ( self::schema() as $group ) {
+			foreach ( $group['fields'] as $key => $def ) {
+				$flat[ $key ] = $def;
+			}
+		}
+		foreach ( $in as $key => $val ) {
+			if ( ! isset( $flat[ $key ] ) ) {
+				continue; // ignore unknown keys
+			}
+			$existing[ $key ] = self::sanitize_one( $flat[ $key ]['type'], $val );
+		}
+		self::$cache = $existing;
+		return $existing;
+	}
+
+	/**
+	 * Sanitize a single value by field type. Shared by the admin form + REST.
+	 */
+	public static function sanitize_one( $type, $val ) {
+		switch ( $type ) {
+			case 'checkbox':
+				return ( '1' === (string) $val || 1 === $val || true === $val ) ? '1' : '0';
+			case 'textarea':
+				return sanitize_textarea_field( (string) $val );
+			case 'color':
+				return (string) sanitize_hex_color( (string) $val );
+			case 'css':
+				// Allow CSS (including `>` child combinators) but strip any
+				// <style>/<script> tags so the value can't break out of <style>.
+				return trim( preg_replace( '#</?\s*(script|style)[^>]*>#i', '', (string) $val ) );
+			default:
+				return sanitize_text_field( (string) $val );
+		}
 	}
 
 	/**
@@ -99,6 +165,12 @@ class DCK_Settings {
 					'profile_faq_heading'         => array( 'label' => __( 'FAQ heading', 'dck-directory' ), 'type' => 'text', 'default' => 'Frequently asked questions' ),
 					'profile_quote_heading'       => array( 'label' => __( 'Quote form heading', 'dck-directory' ), 'type' => 'text', 'default' => 'Request a free quote' ),
 					'profile_quote_button'        => array( 'label' => __( 'Quote submit button', 'dck-directory' ), 'type' => 'text', 'default' => 'Get my free quote' ),
+				),
+			),
+			'advanced' => array(
+				'title'  => __( 'Custom CSS', 'dck-directory' ),
+				'fields' => array(
+					'custom_css' => array( 'label' => __( 'Custom CSS', 'dck-directory' ), 'type' => 'css', 'default' => '', 'help' => __( 'Applied on every directory page (including contractor profiles and archives). Stored in the database, so it survives plugin updates and is editable over the REST API.', 'dck-directory' ) ),
 				),
 			),
 		);
@@ -175,18 +247,10 @@ class DCK_Settings {
 		$out = array();
 		foreach ( self::schema() as $group ) {
 			foreach ( $group['fields'] as $key => $def ) {
-				switch ( $def['type'] ) {
-					case 'checkbox':
-						$out[ $key ] = isset( $in[ $key ] ) ? '1' : '0';
-						break;
-					case 'textarea':
-						$out[ $key ] = isset( $in[ $key ] ) ? sanitize_textarea_field( $in[ $key ] ) : '';
-						break;
-					case 'color':
-						$out[ $key ] = isset( $in[ $key ] ) ? sanitize_hex_color( $in[ $key ] ) : '';
-						break;
-					default:
-						$out[ $key ] = isset( $in[ $key ] ) ? sanitize_text_field( $in[ $key ] ) : '';
+				if ( 'checkbox' === $def['type'] ) {
+					$out[ $key ] = isset( $in[ $key ] ) ? '1' : '0';
+				} else {
+					$out[ $key ] = isset( $in[ $key ] ) ? self::sanitize_one( $def['type'], $in[ $key ] ) : '';
 				}
 			}
 		}
@@ -215,7 +279,9 @@ class DCK_Settings {
 							<tr>
 								<th scope="row"><label for="dck_<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $def['label'] ); ?></label></th>
 								<td>
-									<?php if ( 'textarea' === $def['type'] ) : ?>
+									<?php if ( 'css' === $def['type'] ) : ?>
+										<textarea id="dck_<?php echo esc_attr( $key ); ?>" name="dck_settings[<?php echo esc_attr( $key ); ?>]" rows="10" class="large-text code" spellcheck="false" style="font-family:Menlo,Consolas,monospace;"><?php echo esc_textarea( $val ); ?></textarea>
+									<?php elseif ( 'textarea' === $def['type'] ) : ?>
 										<textarea id="dck_<?php echo esc_attr( $key ); ?>" name="dck_settings[<?php echo esc_attr( $key ); ?>]" rows="3" class="large-text"><?php echo esc_textarea( $val ); ?></textarea>
 									<?php elseif ( 'checkbox' === $def['type'] ) : ?>
 										<label><input type="checkbox" id="dck_<?php echo esc_attr( $key ); ?>" name="dck_settings[<?php echo esc_attr( $key ); ?>]" value="1" <?php checked( '1', (string) $val ); ?>> <?php esc_html_e( 'Enabled', 'dck-directory' ); ?></label>
