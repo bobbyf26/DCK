@@ -23,6 +23,8 @@ class DCK_Templates {
 	private function __construct() {
 		add_filter( 'template_include', array( $this, 'route' ) );
 		add_filter( 'the_content', array( $this, 'single_content' ) );
+		// LocalBusiness structured data in <head> for single profiles.
+		add_action( 'wp_head', 'dck_print_profile_schema' );
 	}
 
 	/**

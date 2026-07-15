@@ -486,3 +486,218 @@ function dck_fmt_time( $hhmm ) {
 	}
 	return $h . ( $m ? ':' . str_pad( $m, 2, '0', STR_PAD_LEFT ) : '' ) . ' ' . $ap;
 }
+
+/**
+ * Build a schema.org LocalBusiness (GeneralContractor) structured-data array
+ * from everything the contractor has filled in. Premium-only fields are read
+ * through DCK_Fields::get(), which returns '' when the tier hasn't unlocked
+ * them — so a free listing only emits the data it actually has (NAP, categories,
+ * logo, description), while a premium listing adds hours, reviews, website,
+ * socials, gallery, and services.
+ *
+ * @param int $post_id Contractor listing ID.
+ * @return array JSON-LD-ready associative array.
+ */
+function dck_build_local_business_schema( $post_id ) {
+	$premium = DCK_Fields::is_premium( $post_id );
+	$name    = get_the_title( $post_id );
+	$permalink = get_permalink( $post_id );
+
+	$phone   = get_post_meta( $post_id, '_dck_phone', true );
+	$addr    = get_post_meta( $post_id, '_dck_address', true );
+	$city    = get_post_meta( $post_id, '_dck_city', true );
+	$state   = get_post_meta( $post_id, '_dck_state', true );
+	$zip     = get_post_meta( $post_id, '_dck_zip', true );
+	$website = DCK_Fields::get( $post_id, 'website' );
+	$email   = DCK_Fields::get( $post_id, 'email' );
+
+	$schema = array(
+		'@context' => 'https://schema.org',
+		'@type'    => 'GeneralContractor',
+		'@id'      => $permalink . '#business',
+		'name'     => $name,
+		'url'      => $website ? $website : $permalink,
+	);
+
+	$desc = trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( (string) get_post_field( 'post_content', $post_id ) ) ) );
+	if ( '' !== $desc ) {
+		$schema['description'] = ( function_exists( 'mb_substr' ) ? mb_substr( $desc, 0, 500 ) : substr( $desc, 0, 500 ) );
+	}
+
+	if ( $phone ) {
+		$schema['telephone'] = $phone;
+	}
+	if ( $email ) {
+		$schema['email'] = $email;
+	}
+
+	if ( $addr || $city || $state || $zip ) {
+		$schema['address'] = array_filter(
+			array(
+				'@type'           => 'PostalAddress',
+				'streetAddress'   => $addr,
+				'addressLocality' => $city,
+				'addressRegion'   => $state,
+				'postalCode'      => $zip,
+				'addressCountry'  => 'US',
+			),
+			static function ( $v ) {
+				return '' !== $v && null !== $v;
+			}
+		);
+	}
+
+	// Images: logo/featured first, then up to 6 gallery photos (premium).
+	$images = array();
+	$thumb  = get_the_post_thumbnail_url( $post_id, 'large' );
+	if ( $thumb ) {
+		$images[] = $thumb;
+	}
+	if ( $premium ) {
+		$gallery = array_filter( array_map( 'absint', explode( ',', (string) DCK_Fields::get( $post_id, 'gallery' ) ) ) );
+		foreach ( array_slice( $gallery, 0, 6 ) as $gid ) {
+			$u = wp_get_attachment_image_url( $gid, 'large' );
+			if ( $u ) {
+				$images[] = $u;
+			}
+		}
+	}
+	if ( $images ) {
+		$schema['image'] = array_values( array_unique( $images ) );
+	}
+
+	// Areas served: the premium "cities served" list, else the base city/state.
+	$areas_served = array();
+	$sa           = DCK_Fields::get( $post_id, 'service_area' );
+	if ( $sa ) {
+		$areas_served = array_values( array_filter( array_map( 'trim', explode( ',', $sa ) ) ) );
+	} elseif ( $city || $state ) {
+		$areas_served[] = trim( $city . ( $city && $state ? ', ' : '' ) . $state );
+	}
+	if ( $areas_served ) {
+		$schema['areaServed'] = $areas_served;
+	}
+
+	// Social profiles (premium).
+	$same_as = array();
+	foreach ( array( 'facebook', 'instagram', 'youtube' ) as $sk ) {
+		$sv = DCK_Fields::get( $post_id, $sk );
+		if ( $sv ) {
+			$same_as[] = $sv;
+		}
+	}
+	if ( $same_as ) {
+		$schema['sameAs'] = $same_as;
+	}
+
+	// Business hours (premium) → OpeningHoursSpecification.
+	$hours = DCK_Fields::get_json( $post_id, 'hours' );
+	if ( $hours ) {
+		$days = array( 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday' );
+		$spec = array();
+		foreach ( $days as $i => $dname ) {
+			$slot = isset( $hours[ $i ] ) ? $hours[ $i ] : null;
+			if ( is_array( $slot ) && ! empty( $slot[0] ) && ! empty( $slot[1] ) ) {
+				$spec[] = array(
+					'@type'     => 'OpeningHoursSpecification',
+					'dayOfWeek' => 'https://schema.org/' . $dname,
+					'opens'     => $slot[0],
+					'closes'    => $slot[1],
+				);
+			}
+		}
+		if ( $spec ) {
+			$schema['openingHoursSpecification'] = $spec;
+		}
+	}
+
+	// Services offered → makesOffer (coating systems + service areas + list).
+	$offer_names = array();
+	foreach ( array( DCK_Post_Types::TAX_SERVICE, DCK_Post_Types::TAX_AREA ) as $tax ) {
+		$terms = wp_get_post_terms( $post_id, $tax, array( 'fields' => 'names' ) );
+		if ( is_array( $terms ) ) {
+			$offer_names = array_merge( $offer_names, $terms );
+		}
+	}
+	$slist = DCK_Fields::get( $post_id, 'services_list' );
+	if ( $slist ) {
+		$offer_names = array_merge( $offer_names, array_map( 'trim', explode( "\n", $slist ) ) );
+	}
+	$offer_names = array_values( array_unique( array_filter( $offer_names ) ) );
+	if ( $offer_names ) {
+		$offers = array();
+		foreach ( $offer_names as $oname ) {
+			$offers[] = array(
+				'@type'       => 'Offer',
+				'itemOffered' => array( '@type' => 'Service', 'name' => $oname ),
+			);
+		}
+		$schema['makesOffer'] = $offers;
+	}
+
+	// Ratings + reviews (premium).
+	$reviews = DCK_Fields::get_json( $post_id, 'reviews' );
+	if ( $reviews ) {
+		$count = 0;
+		$sum   = 0;
+		$out   = array();
+		foreach ( $reviews as $r ) {
+			$rt = isset( $r['rating'] ) ? (int) $r['rating'] : 0;
+			if ( $rt < 1 ) {
+				continue;
+			}
+			$count++;
+			$sum += $rt;
+			$rev = array(
+				'@type'        => 'Review',
+				'reviewRating' => array( '@type' => 'Rating', 'ratingValue' => $rt, 'bestRating' => 5 ),
+			);
+			if ( ! empty( $r['name'] ) ) {
+				$rev['author'] = array( '@type' => 'Person', 'name' => $r['name'] );
+			}
+			if ( ! empty( $r['text'] ) ) {
+				$rev['reviewBody'] = $r['text'];
+			}
+			if ( ! empty( $r['date'] ) ) {
+				$ts = strtotime( $r['date'] );
+				if ( $ts ) {
+					$rev['datePublished'] = gmdate( 'Y-m-d', $ts );
+				}
+			}
+			$out[] = $rev;
+		}
+		if ( $count ) {
+			$schema['aggregateRating'] = array(
+				'@type'       => 'AggregateRating',
+				'ratingValue' => round( $sum / $count, 1 ),
+				'reviewCount' => $count,
+				'bestRating'  => 5,
+			);
+			$schema['review'] = array_slice( $out, 0, 10 );
+		}
+	}
+
+	/**
+	 * Filter the generated LocalBusiness schema before output.
+	 *
+	 * @param array $schema  The schema array.
+	 * @param int   $post_id Listing ID.
+	 */
+	return apply_filters( 'dck_local_business_schema', $schema, $post_id );
+}
+
+/**
+ * Print the LocalBusiness JSON-LD in <head> on a single contractor profile.
+ * Output-only in the head, so it never touches the visible profile DOM.
+ */
+function dck_print_profile_schema() {
+	if ( ! is_singular( DCK_Post_Types::POST_TYPE ) ) {
+		return;
+	}
+	$post_id = get_queried_object_id();
+	if ( ! $post_id ) {
+		return;
+	}
+	$schema = dck_build_local_business_schema( $post_id );
+	echo "\n<script type=\"application/ld+json\">" . wp_json_encode( $schema, JSON_HEX_TAG | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . "</script>\n";
+}
