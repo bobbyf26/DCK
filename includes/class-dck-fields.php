@@ -25,6 +25,26 @@ class DCK_Fields {
 
 	private function __construct() {
 		add_action( 'init', array( $this, 'register_meta' ) );
+		// Ensure every contractor has _dck_tier and _dck_featured meta, so the
+		// featured-ordering search query never excludes a listing (and REST-
+		// created listings behave consistently).
+		add_action( 'save_post_' . DCK_Post_Types::POST_TYPE, array( $this, 'ensure_defaults' ), 20, 1 );
+	}
+
+	/**
+	 * Guarantee the tier/featured meta rows exist on a listing.
+	 */
+	public function ensure_defaults( $post_id ) {
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+		if ( '' === get_post_meta( $post_id, '_dck_tier', true ) ) {
+			update_post_meta( $post_id, '_dck_tier', 'free' );
+		}
+		if ( '' === get_post_meta( $post_id, '_dck_featured', true )
+			&& ! metadata_exists( 'post', $post_id, '_dck_featured' ) ) {
+			update_post_meta( $post_id, '_dck_featured', '' );
+		}
 	}
 
 	/**

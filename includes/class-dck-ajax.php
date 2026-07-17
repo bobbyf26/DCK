@@ -70,16 +70,16 @@ class DCK_Ajax {
 			'posts_per_page' => 12,
 			'paged'          => $paged,
 			's'              => $keyword,
-			// Featured listings float to the top, then newest. The OR meta
-			// query keeps listings that have no _dck_featured meta from being
-			// dropped by the meta ordering join.
-			'meta_key'       => '_dck_featured', // phpcs:ignore WordPress.DB.SlowDBQuery
-			'orderby'        => array( 'meta_value' => 'DESC', 'date' => 'DESC' ),
+			// Featured listings float to the top, then newest. Use a NAMED
+			// meta_query clause for the ordering (not a top-level meta_key,
+			// which would force an INNER JOIN and drop any listing that has no
+			// _dck_featured meta). The OR + NOT EXISTS keeps those listings in.
 			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery
-				'relation' => 'OR',
-				array( 'key' => '_dck_featured', 'compare' => 'EXISTS' ),
+				'relation'        => 'OR',
+				'featured_clause' => array( 'key' => '_dck_featured', 'compare' => 'EXISTS' ),
 				array( 'key' => '_dck_featured', 'compare' => 'NOT EXISTS' ),
 			),
+			'orderby'        => array( 'featured_clause' => 'DESC', 'date' => 'DESC' ),
 		);
 		if ( count( $tax_query ) > 1 ) {
 			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery
