@@ -184,27 +184,29 @@ function dck_render_card( $post_id ) {
  * Full contractor profile — the approved design, driven by data + tier.
  */
 function dck_render_profile( $post_id ) {
-	$name    = get_the_title( $post_id );
-	$premium = DCK_Fields::is_premium( $post_id );
-	$about   = apply_filters( 'the_content', get_post_field( 'post_content', $post_id ) );
-	$phone   = get_post_meta( $post_id, '_dck_phone', true );
-	$address = get_post_meta( $post_id, '_dck_address', true );
-	$city    = get_post_meta( $post_id, '_dck_city', true );
-	$state   = get_post_meta( $post_id, '_dck_state', true );
-	$zip     = get_post_meta( $post_id, '_dck_zip', true );
-	$area    = dck_service_area_text( $post_id );
-	$systems = wp_get_post_terms( $post_id, DCK_Post_Types::TAX_SERVICE, array( 'fields' => 'names' ) );
-	$systems = is_array( $systems ) ? $systems : array();
+	$name      = get_the_title( $post_id );
+	$premium   = DCK_Fields::is_premium( $post_id );
+	$about     = apply_filters( 'the_content', get_post_field( 'post_content', $post_id ) );
+	$phone     = get_post_meta( $post_id, '_dck_phone', true );
+	$tel       = preg_replace( '/[^0-9+]/', '', (string) $phone );
+	$address   = get_post_meta( $post_id, '_dck_address', true );
+	$city      = get_post_meta( $post_id, '_dck_city', true );
+	$state     = get_post_meta( $post_id, '_dck_state', true );
+	$zip       = get_post_meta( $post_id, '_dck_zip', true );
+	$area      = dck_service_area_text( $post_id );
+	$systems   = wp_get_post_terms( $post_id, DCK_Post_Types::TAX_SERVICE, array( 'fields' => 'names' ) );
+	$systems   = is_array( $systems ) ? $systems : array();
 	$app_areas = wp_get_post_terms( $post_id, DCK_Post_Types::TAX_AREA, array( 'fields' => 'names' ) );
 	$app_areas = is_array( $app_areas ) ? $app_areas : array();
-	$logo    = get_the_post_thumbnail_url( $post_id, 'thumbnail' );
+	$logo      = get_the_post_thumbnail_url( $post_id, 'thumbnail' );
 
 	// Premium-gated data.
-	$gallery = $premium ? array_filter( array_map( 'absint', explode( ',', (string) DCK_Fields::get( $post_id, 'gallery' ) ) ) ) : array();
-	$reviews = $premium ? DCK_Fields::get_json( $post_id, 'reviews' ) : array();
-	$faq     = $premium ? DCK_Fields::get_json( $post_id, 'faq' ) : array();
-	$hours   = $premium ? DCK_Fields::get_json( $post_id, 'hours' ) : array();
-	$services = $premium ? array_filter( array_map( 'trim', explode( "\n", (string) DCK_Fields::get( $post_id, 'services_list' ) ) ) ) : array();
+	$gallery     = $premium ? array_filter( array_map( 'absint', explode( ',', (string) DCK_Fields::get( $post_id, 'gallery' ) ) ) ) : array();
+	$reviews     = $premium ? DCK_Fields::get_json( $post_id, 'reviews' ) : array();
+	$faq         = $premium ? DCK_Fields::get_json( $post_id, 'faq' ) : array();
+	$hours       = $premium ? DCK_Fields::get_json( $post_id, 'hours' ) : array();
+	$services    = $premium ? array_filter( array_map( 'trim', explode( "\n", (string) DCK_Fields::get( $post_id, 'services_list' ) ) ) ) : array();
+	$area_cities = $premium ? array_filter( array_map( 'trim', explode( ',', (string) DCK_Fields::get( $post_id, 'service_area' ) ) ) ) : array();
 
 	$count = count( $reviews );
 	$avg   = 0;
@@ -213,7 +215,6 @@ function dck_render_profile( $post_id ) {
 	}
 	$avg = $count ? round( $avg / $count, 1 ) : 0;
 
-	// Rating distribution.
 	$dist = array( 5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0 );
 	foreach ( $reviews as $r ) {
 		$rt = isset( $r['rating'] ) ? (int) $r['rating'] : 0;
@@ -222,16 +223,73 @@ function dck_render_profile( $post_id ) {
 		}
 	}
 
+	// Credentials rows.
+	$details = array(
+		'license'        => __( 'License', 'dck-directory' ),
+		'insurance'      => __( 'Insurance', 'dck-directory' ),
+		'year_founded'   => __( 'Year founded', 'dck-directory' ),
+		'crew'           => __( 'Crew size', 'dck-directory' ),
+		'payment'        => __( 'Payment', 'dck-directory' ),
+		'free_estimates' => __( 'Free estimates', 'dck-directory' ),
+		'warranty'       => __( 'Warranty', 'dck-directory' ),
+	);
+	$has_details = false;
+	foreach ( $details as $k => $l ) {
+		if ( $premium && DCK_Fields::get( $post_id, $k ) ) {
+			$has_details = true;
+			break;
+		}
+	}
+
+	// Which main-column panes have content? Order defines tab + stack order.
+	$has_about = '' !== trim( wp_strip_all_tags( $about ) );
+	$pane_defs = array(
+		'about'       => array( 'show' => $has_about,                   'tab' => __( 'About', 'dck-directory' ) ),
+		'services'    => array( 'show' => ( $premium && $services ),    'tab' => __( 'Services', 'dck-directory' ) ),
+		'reviews'     => array( 'show' => ( $premium && $count ),       'tab' => __( 'Reviews', 'dck-directory' ) ),
+		'cities'      => array( 'show' => ( $premium && $area_cities ), 'tab' => __( 'Cities served', 'dck-directory' ) ),
+		'credentials' => array( 'show' => $has_details,                 'tab' => __( 'Credentials', 'dck-directory' ) ),
+		'faq'         => array( 'show' => ( $premium && $faq ),         'tab' => __( 'FAQ', 'dck-directory' ) ),
+	);
+	$active_panes = array();
+	foreach ( $pane_defs as $key => $d ) {
+		if ( $d['show'] ) {
+			$active_panes[ $key ] = $d['tab'];
+		}
+	}
+	$tabbed    = count( $active_panes ) >= 2;
+	$first_key = $active_panes ? array_key_first( $active_panes ) : '';
+
+	// Lightbox: full-size URLs for every gallery image.
+	$lightbox = array();
+	foreach ( $gallery as $gid ) {
+		$u = wp_get_attachment_image_url( $gid, 'full' );
+		if ( $u ) {
+			$lightbox[] = $u;
+		}
+	}
+
+	// Sidebar bits reused below.
+	$website = $premium ? DCK_Fields::get( $post_id, 'website' ) : '';
+	$resp    = $premium ? DCK_Fields::get( $post_id, 'response_time' ) : '';
+	$show_map = $premium && $address;
+	$map_src  = '';
+	if ( $show_map ) {
+		$map_query = trim( $address . ' ' . $city . ' ' . $state . ' ' . $zip );
+		$map_src   = 'https://www.google.com/maps?q=' . rawurlencode( $map_query ) . '&output=embed';
+	}
+
+	$svg_check = '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>';
+
 	ob_start();
 	?>
 	<div class="dck-profile">
 		<div class="dck-wrap">
 
 			<?php if ( $premium && $gallery ) : ?>
-			<section class="dck-mosaic" aria-label="<?php esc_attr_e( 'Project photos', 'dck-directory' ); ?>">
+			<section class="dck-mosaic" aria-label="<?php esc_attr_e( 'Project photos', 'dck-directory' ); ?>" data-dck-lightbox="<?php echo esc_attr( wp_json_encode( $lightbox ) ); ?>">
 				<?php
-				$shown = array_slice( $gallery, 0, 5 );
-				foreach ( $shown as $gi => $gid ) {
+				foreach ( array_slice( $gallery, 0, 5 ) as $gid ) {
 					$src = wp_get_attachment_image_url( $gid, 'large' );
 					if ( $src ) {
 						echo '<div class="dck-photo"><img src="' . esc_url( $src ) . '" alt="' . esc_attr( $name ) . '"></div>';
@@ -262,12 +320,12 @@ function dck_render_profile( $post_id ) {
 							<?php echo dck_stars_html( $avg ); // phpcs:ignore ?>
 							<span class="dck-rating-num"><?php echo esc_html( $avg ); ?></span>
 							<a href="#dck-reviews">(<?php echo esc_html( sprintf( _n( '%d review', '%d reviews', $count, 'dck-directory' ), $count ) ); ?>)</a>
-							<span class="dck-dot">•</span>
+							<span class="dck-dot">&bull;</span>
 						<?php endif; ?>
 						<?php if ( $area ) : ?><span class="dck-muted"><?php echo esc_html( sprintf( __( 'Serving %s', 'dck-directory' ), $area ) ); ?></span><?php endif; ?>
 						<?php if ( $premium && $hours ) : ?>
-							<span class="dck-dot">•</span>
-							<span class="dck-open-status" data-dck-hours='<?php echo esc_attr( wp_json_encode( $hours ) ); ?>'><b><?php esc_html_e( 'Hours', 'dck-directory' ); ?></b></span>
+							<span class="dck-dot">&bull;</span>
+							<span class="dck-open-status" data-dck-hours="<?php echo esc_attr( wp_json_encode( $hours ) ); ?>"><b><?php esc_html_e( 'Hours', 'dck-directory' ); ?></b></span>
 						<?php endif; ?>
 					</div>
 					<?php if ( $systems || $app_areas ) : ?>
@@ -279,29 +337,39 @@ function dck_render_profile( $post_id ) {
 				</div>
 			</header>
 
-			<div class="dck-cols">
-				<div class="dck-main">
+			<a class="dck-cta" href="#dck-quote"><?php echo esc_html( dck_setting( 'profile_quote_heading' ) ); ?></a>
 
-					<?php if ( trim( wp_strip_all_tags( $about ) ) ) : ?>
-					<section class="dck-card">
+			<?php if ( $tabbed ) : ?>
+			<div class="dck-tabs" role="tablist">
+				<?php foreach ( $active_panes as $key => $label ) : ?>
+					<button type="button" class="dck-tab" data-tab="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $label ); ?></button>
+				<?php endforeach; ?>
+			</div>
+			<?php endif; ?>
+
+			<div class="dck-cols">
+				<div class="dck-main<?php echo $tabbed ? ' dck-tabbed' : ''; ?>">
+
+					<?php if ( $has_about ) : ?>
+					<section class="dck-card dck-pane" data-pane="about">
 						<h2><?php echo esc_html( dck_setting( 'profile_about_heading' ) ); ?></h2>
 						<?php echo wp_kses_post( $about ); ?>
 					</section>
 					<?php endif; ?>
 
 					<?php if ( $premium && $services ) : ?>
-					<section class="dck-card">
+					<section class="dck-card dck-pane" data-pane="services">
 						<h2><?php echo esc_html( dck_setting( 'profile_services_heading' ) ); ?></h2>
 						<ul class="dck-svc-grid">
 							<?php foreach ( $services as $s ) : ?>
-							<li><svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg><?php echo esc_html( $s ); ?></li>
+							<li><?php echo $svg_check; // phpcs:ignore ?><?php echo esc_html( $s ); ?></li>
 							<?php endforeach; ?>
 						</ul>
 					</section>
 					<?php endif; ?>
 
 					<?php if ( $premium && $count ) : ?>
-					<section class="dck-card" id="dck-reviews">
+					<section class="dck-card dck-pane" data-pane="reviews" id="dck-reviews">
 						<h2><?php echo esc_html( dck_setting( 'profile_reviews_heading' ) ); ?></h2>
 						<div class="dck-rev-summary">
 							<div class="dck-rev-big">
@@ -333,10 +401,8 @@ function dck_render_profile( $post_id ) {
 					</section>
 					<?php endif; ?>
 
-					<?php
-					$area_cities = $premium ? array_filter( array_map( 'trim', explode( ',', (string) DCK_Fields::get( $post_id, 'service_area' ) ) ) ) : array();
-					if ( $premium && $area_cities ) : ?>
-					<section class="dck-card">
+					<?php if ( $premium && $area_cities ) : ?>
+					<section class="dck-card dck-pane" data-pane="cities">
 						<h2><?php echo esc_html( dck_setting( 'profile_area_heading' ) ); ?></h2>
 						<div class="dck-area-cities">
 							<?php foreach ( $area_cities as $c ) : ?><span class="dck-chip dck-chip--plain"><?php echo esc_html( $c ); ?></span><?php endforeach; ?>
@@ -344,22 +410,8 @@ function dck_render_profile( $post_id ) {
 					</section>
 					<?php endif; ?>
 
-					<?php
-					$details = array(
-						'license'        => __( 'License', 'dck-directory' ),
-						'insurance'      => __( 'Insurance', 'dck-directory' ),
-						'year_founded'   => __( 'Year founded', 'dck-directory' ),
-						'crew'           => __( 'Crew size', 'dck-directory' ),
-						'payment'        => __( 'Payment', 'dck-directory' ),
-						'free_estimates' => __( 'Free estimates', 'dck-directory' ),
-						'warranty'       => __( 'Warranty', 'dck-directory' ),
-					);
-					$has_details = false;
-					foreach ( $details as $k => $l ) {
-						if ( $premium && DCK_Fields::get( $post_id, $k ) ) { $has_details = true; break; }
-					}
-					if ( $has_details ) : ?>
-					<section class="dck-card">
+					<?php if ( $has_details ) : ?>
+					<section class="dck-card dck-pane" data-pane="credentials">
 						<h2><?php echo esc_html( dck_setting( 'profile_credentials_heading' ) ); ?></h2>
 						<div class="dck-details">
 							<?php foreach ( $details as $k => $l ) :
@@ -372,7 +424,7 @@ function dck_render_profile( $post_id ) {
 					<?php endif; ?>
 
 					<?php if ( $premium && $faq ) : ?>
-					<section class="dck-card">
+					<section class="dck-card dck-pane" data-pane="faq">
 						<h2><?php echo esc_html( dck_setting( 'profile_faq_heading' ) ); ?></h2>
 						<?php foreach ( $faq as $f ) : ?>
 						<details class="dck-faq">
@@ -386,9 +438,8 @@ function dck_render_profile( $post_id ) {
 				</div>
 
 				<aside class="dck-side">
-					<section class="dck-card dck-cta-card">
+					<section class="dck-card dck-cta-card" id="dck-quote">
 						<h2><?php echo esc_html( dck_setting( 'profile_quote_heading' ) ); ?></h2>
-						<?php $resp = $premium ? DCK_Fields::get( $post_id, 'response_time' ) : ''; ?>
 						<?php if ( $resp ) : ?><div class="dck-responds"><span class="dck-pulse"></span><?php echo esc_html( sprintf( __( 'Typically responds within %s', 'dck-directory' ), $resp ) ); ?></div><?php endif; ?>
 						<form class="dck-quote" data-dck-lead>
 							<input type="hidden" name="listing" value="<?php echo (int) $post_id; ?>">
@@ -404,7 +455,7 @@ function dck_render_profile( $post_id ) {
 
 					<section class="dck-card">
 						<?php if ( $phone ) : ?>
-						<a class="dck-btn dck-btn--ghost" href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>"><?php echo esc_html( sprintf( __( 'Call %s', 'dck-directory' ), $phone ) ); ?></a>
+						<a class="dck-btn dck-btn--ghost" href="tel:<?php echo esc_attr( $tel ); ?>"><?php echo esc_html( sprintf( __( 'Call %s', 'dck-directory' ), $phone ) ); ?></a>
 						<?php endif; ?>
 						<?php if ( $address || $city ) : ?>
 						<div class="dck-contact-row">
@@ -412,7 +463,9 @@ function dck_render_profile( $post_id ) {
 							<span><b><?php echo esc_html( $address ); ?></b><br><span class="dck-muted"><?php echo esc_html( trim( $city . ( $city && $state ? ', ' : '' ) . $state . ' ' . $zip ) ); ?></span></span>
 						</div>
 						<?php endif; ?>
-						<?php $website = $premium ? DCK_Fields::get( $post_id, 'website' ) : ''; ?>
+						<?php if ( $show_map ) : ?>
+						<div class="dck-map"><iframe src="<?php echo esc_url( $map_src ); ?>" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade" title="<?php echo esc_attr( sprintf( __( 'Map to %s', 'dck-directory' ), $name ) ); ?>"></iframe></div>
+						<?php endif; ?>
 						<?php if ( $website ) : ?>
 						<div class="dck-contact-row">
 							<svg viewBox="0 0 24 24" width="17" height="17"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm7.9 9h-3a15.6 15.6 0 0 0-1.8-6.3A8 8 0 0 1 19.9 11zM12 4c.9 1.2 2 3.6 2.4 7H9.6C10 7.6 11.1 5.2 12 4zM4.1 13h3a15.6 15.6 0 0 0 1.8 6.3A8 8 0 0 1 4.1 13zm3-2h-3a8 8 0 0 1 4.8-6.3A15.6 15.6 0 0 0 7.1 11zM12 20c-.9-1.2-2-3.6-2.4-7h4.8c-.4 3.4-1.5 5.8-2.4 7z"/></svg>
@@ -420,31 +473,38 @@ function dck_render_profile( $post_id ) {
 						</div>
 						<?php endif; ?>
 						<?php
-						$socials = array();
-						foreach ( array( 'facebook' => 'Facebook', 'instagram' => 'Instagram', 'youtube' => 'YouTube' ) as $sk => $sl ) {
+						$social_icons = array(
+							'facebook'  => '<path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>',
+							'instagram' => '<path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>',
+							'youtube'   => '<path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>',
+						);
+						$social_labels = array( 'facebook' => 'Facebook', 'instagram' => 'Instagram', 'youtube' => 'YouTube' );
+						$socials = '';
+						foreach ( $social_icons as $sk => $path ) {
 							$sv = $premium ? DCK_Fields::get( $post_id, $sk ) : '';
 							if ( $sv ) {
-								$socials[] = '<a href="' . esc_url( $sv ) . '" target="_blank" rel="nofollow noopener">' . esc_html( $sl ) . '</a>';
+								$socials .= '<a href="' . esc_url( $sv ) . '" target="_blank" rel="nofollow noopener" aria-label="' . esc_attr( $social_labels[ $sk ] ) . '" title="' . esc_attr( $social_labels[ $sk ] ) . '"><svg viewBox="0 0 24 24">' . $path . '</svg></a>';
 							}
 						}
 						if ( $socials ) {
-							echo '<div class="dck-socials">' . implode( '', $socials ) . '</div>'; // phpcs:ignore
+							echo '<div class="dck-soc">' . $socials . '</div>'; // phpcs:ignore
 						}
 						?>
 						<?php if ( $premium && $hours ) : ?>
 						<div class="dck-contact-row dck-hours-row">
 							<svg viewBox="0 0 24 24" width="17" height="17"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 10.6l4.2 2.5-.8 1.3L11 13.5V7h2v5.6z"/></svg>
 							<div style="flex:1">
-								<b><?php esc_html_e( 'Hours', 'dck-directory' ); ?> <span class="dck-open-pill" data-dck-hours-pill='<?php echo esc_attr( wp_json_encode( $hours ) ); ?>'></span></b>
-								<table class="dck-hours-table">
+								<b><?php esc_html_e( 'Hours', 'dck-directory' ); ?> <span class="dck-open-pill" data-dck-hours-pill="<?php echo esc_attr( wp_json_encode( $hours ) ); ?>"></span></b>
+								<div class="dck-hours-list">
 									<?php
 									$days = array( 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday' );
 									foreach ( $days as $d => $label ) :
-										$slot = isset( $hours[ $d ] ) ? $hours[ $d ] : null;
-										$txt  = $slot ? dck_fmt_time( $slot[0] ) . ' – ' . dck_fmt_time( $slot[1] ) : __( 'Closed', 'dck-directory' ); ?>
-										<tr><td><?php echo esc_html( $label ); ?></td><td><?php echo esc_html( $txt ); ?></td></tr>
+										$slot   = isset( $hours[ $d ] ) ? $hours[ $d ] : null;
+										$is_open = is_array( $slot ) && ! empty( $slot[0] ) && ! empty( $slot[1] );
+										$txt     = $is_open ? dck_fmt_time( $slot[0] ) . ' – ' . dck_fmt_time( $slot[1] ) : __( 'Closed', 'dck-directory' ); ?>
+										<div class="dck-hrow<?php echo $is_open ? '' : ' dck-hrow--closed'; ?>"><span><?php echo esc_html( $label ); ?></span><b><?php echo esc_html( $txt ); ?></b></div>
 									<?php endforeach; ?>
-								</table>
+								</div>
 							</div>
 						</div>
 						<?php endif; ?>
@@ -460,9 +520,21 @@ function dck_render_profile( $post_id ) {
 			</div>
 		</div>
 
+		<?php if ( $premium && $lightbox ) : ?>
+		<div class="dck-lb" role="dialog" aria-label="<?php esc_attr_e( 'Photo gallery', 'dck-directory' ); ?>">
+			<button class="dck-lb-btn dck-lb-close" type="button" aria-label="<?php esc_attr_e( 'Close', 'dck-directory' ); ?>">&#215;</button>
+			<button class="dck-lb-btn dck-lb-prev" type="button" aria-label="<?php esc_attr_e( 'Previous', 'dck-directory' ); ?>">&#8249;</button>
+			<img class="dck-lb-img" src="" alt="<?php esc_attr_e( 'Project photo', 'dck-directory' ); ?>">
+			<button class="dck-lb-btn dck-lb-next" type="button" aria-label="<?php esc_attr_e( 'Next', 'dck-directory' ); ?>">&#8250;</button>
+			<div class="dck-lb-count"></div>
+		</div>
+		<?php endif; ?>
+
 		<div class="dck-callbar">
-			<?php if ( $phone ) : ?><a class="dck-btn dck-btn--ghost" href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $phone ) ); ?>" style="flex:1"><?php esc_html_e( 'Call', 'dck-directory' ); ?></a><?php endif; ?>
-			<a class="dck-btn" href="#dck-reviews" style="flex:2"><?php esc_html_e( 'Get a free quote', 'dck-directory' ); ?></a>
+			<?php if ( $phone ) : ?>
+			<a class="dck-bar-btn dck-bar-ghost" href="tel:<?php echo esc_attr( $tel ); ?>"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg><span><?php esc_html_e( 'Call', 'dck-directory' ); ?></span></a>
+			<?php endif; ?>
+			<a class="dck-bar-btn dck-bar-solid" href="#dck-quote"><span><?php echo esc_html( dck_setting( 'profile_quote_heading' ) ); ?></span></a>
 		</div>
 	</div>
 	<?php

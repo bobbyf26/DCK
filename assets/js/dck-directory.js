@@ -159,11 +159,58 @@
 		run( false ); // initial load
 	}
 
+	/* ---------------- Profile tabs ---------------- */
+	function initTabs() {
+		var main = document.querySelector( '.dck-main.dck-tabbed' );
+		var tabs = document.querySelectorAll( '.dck-tab' );
+		if ( ! main || ! tabs.length ) { return; }
+		var panes = main.querySelectorAll( '.dck-pane' );
+		function activate( name ) {
+			tabs.forEach( function ( t ) { t.classList.toggle( 'active', t.getAttribute( 'data-tab' ) === name ); } );
+			panes.forEach( function ( p ) { p.classList.toggle( 'active', p.getAttribute( 'data-pane' ) === name ); } );
+		}
+		tabs.forEach( function ( t ) { t.addEventListener( 'click', function () { activate( t.getAttribute( 'data-tab' ) ); } ); } );
+		// Deep link: the header rating link (and any #dck-reviews link) opens the Reviews tab first, then the browser scrolls.
+		document.querySelectorAll( 'a[href="#dck-reviews"]' ).forEach( function ( a ) { a.addEventListener( 'click', function () { activate( 'reviews' ); } ); } );
+		activate( tabs[ 0 ].getAttribute( 'data-tab' ) );
+	}
+
+	/* ---------------- Photo lightbox ---------------- */
+	function initLightbox() {
+		var mosaic = document.querySelector( '.dck-mosaic[data-dck-lightbox]' );
+		var lb = document.querySelector( '.dck-lb' );
+		if ( ! mosaic || ! lb ) { return; }
+		var urls;
+		try { urls = JSON.parse( mosaic.getAttribute( 'data-dck-lightbox' ) ); } catch ( e ) { return; }
+		if ( ! urls || ! urls.length ) { return; }
+		var img = lb.querySelector( '.dck-lb-img' );
+		var cnt = lb.querySelector( '.dck-lb-count' );
+		var idx = 0, n = urls.length;
+		function show( i ) { idx = ( i + n ) % n; img.src = urls[ idx ]; cnt.textContent = ( idx + 1 ) + ' / ' + n; }
+		function open( i ) { show( i ); lb.classList.add( 'open' ); document.body.style.overflow = 'hidden'; }
+		function close() { lb.classList.remove( 'open' ); document.body.style.overflow = ''; }
+		var all = mosaic.querySelector( '.dck-all-photos' );
+		if ( all ) { all.addEventListener( 'click', function () { open( 0 ); } ); }
+		mosaic.querySelectorAll( '.dck-photo' ).forEach( function ( p, k ) { p.addEventListener( 'click', function () { open( k ); } ); } );
+		lb.querySelector( '.dck-lb-close' ).addEventListener( 'click', close );
+		lb.querySelector( '.dck-lb-prev' ).addEventListener( 'click', function () { show( idx - 1 ); } );
+		lb.querySelector( '.dck-lb-next' ).addEventListener( 'click', function () { show( idx + 1 ); } );
+		lb.addEventListener( 'click', function ( e ) { if ( e.target === lb ) { close(); } } );
+		document.addEventListener( 'keydown', function ( e ) {
+			if ( ! lb.classList.contains( 'open' ) ) { return; }
+			if ( e.key === 'Escape' ) { close(); }
+			if ( e.key === 'ArrowLeft' ) { show( idx - 1 ); }
+			if ( e.key === 'ArrowRight' ) { show( idx + 1 ); }
+		} );
+	}
+
 	document.addEventListener( 'DOMContentLoaded', function () {
 		initHours();
 		initSidebar();
 		initLeads();
 		initDirectory();
+		initTabs();
+		initLightbox();
 	} );
 })();
 /* SITE CHROME (appended) — swap site-title text for the DCK logo and
