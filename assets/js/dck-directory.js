@@ -204,6 +204,38 @@
 		} );
 	}
 
+	/* ---------------- Sitewide login modal ---------------- */
+	function initLoginModal() {
+		var modal = document.getElementById( 'dck-login' );
+		if ( ! modal ) { return; }
+		function open() {
+			modal.classList.add( 'open' );
+			modal.setAttribute( 'aria-hidden', 'false' );
+			document.body.style.overflow = 'hidden';
+			var f = modal.querySelector( 'input[name="log"]' );
+			if ( f ) { f.focus(); }
+		}
+		function close() {
+			modal.classList.remove( 'open' );
+			modal.setAttribute( 'aria-hidden', 'true' );
+			document.body.style.overflow = '';
+		}
+		// Intercept links to wp-login.php (open the popup) — but not action=
+		// links (logout, lost password, etc.), which must follow through.
+		document.addEventListener( 'click', function ( e ) {
+			var a = e.target && e.target.closest ? e.target.closest( 'a[href*="wp-login.php"]' ) : null;
+			if ( ! a ) { return; }
+			if ( a.href.indexOf( 'action=' ) !== -1 ) { return; }
+			e.preventDefault();
+			open();
+		} );
+		var closeBtn = modal.querySelector( '.dck-login-close' );
+		if ( closeBtn ) { closeBtn.addEventListener( 'click', close ); }
+		modal.addEventListener( 'click', function ( e ) { if ( e.target === modal ) { close(); } } );
+		document.addEventListener( 'keydown', function ( e ) { if ( e.key === 'Escape' && modal.classList.contains( 'open' ) ) { close(); } } );
+		if ( /[?&]login=1(&|$)/.test( window.location.search ) ) { open(); }
+	}
+
 	document.addEventListener( 'DOMContentLoaded', function () {
 		initHours();
 		initSidebar();
@@ -211,6 +243,7 @@
 		initDirectory();
 		initTabs();
 		initLightbox();
+		initLoginModal();
 	} );
 })();
 /* SITE CHROME (appended) — swap site-title text for the DCK logo and
@@ -219,7 +252,7 @@
 	var hls = document.querySelectorAll('header a');
 	for (var i = 0; i < hls.length; i++) {
 		if (hls[i].textContent.trim() === 'DCK 2.0') {
-			hls[i].innerHTML = '<img src="https://decorativeconcretekingdom.com/wp-content/uploads/2021/03/new-dck-logo-500.png" alt="Decorative Concrete Kingdom" style="height:54px;width:auto;display:block">';
+			hls[i].innerHTML = '<img src="https://incrediblecontracting.com/wp-content/uploads/2026/07/dck-logo-primary-600.png" alt="Decorative Concrete Kingdom" style="height:54px;width:auto;display:block">';
 		}
 	}
 	var lg = document.querySelector('img[alt="Decorative Concrete Kingdom"]');

@@ -107,6 +107,21 @@ function dck_page_url_for( $key, $shortcode ) {
 function dck_directory_url() {
 	return dck_page_url_for( 'directory', 'dck_directory' );
 }
+
+/**
+ * Preview URL for a not-yet-published listing (pending/draft), so owners can
+ * see their listing before it's approved.
+ */
+function dck_listing_preview_url( $post_id ) {
+	return add_query_arg(
+		array(
+			'post_type' => DCK_Post_Types::POST_TYPE,
+			'p'         => (int) $post_id,
+			'preview'   => 'true',
+		),
+		home_url( '/' )
+	);
+}
 function dck_signup_url() {
 	return dck_page_url_for( 'signup', 'dck_signup' );
 }
@@ -164,7 +179,7 @@ function dck_render_card( $post_id ) {
 			<?php if ( $featured ) : ?><span class="dck-card__badge"><?php esc_html_e( 'Featured', 'dck-directory' ); ?></span><?php endif; ?>
 		</div>
 		<div class="dck-card__body">
-			<h3><?php echo esc_html( $name ); ?><?php if ( $premium ) : ?> <span class="dck-verify-dot" title="Verified Pro">✓</span><?php endif; ?></h3>
+			<h3><?php echo esc_html( $name ); ?></h3>
 			<?php if ( $count ) : ?>
 				<div class="dck-card__rating"><?php echo dck_stars_html( $avg, 14 ); // phpcs:ignore ?> <b><?php echo esc_html( $avg ); ?></b> <span>(<?php echo (int) $count; ?>)</span></div>
 			<?php endif; ?>
@@ -241,24 +256,13 @@ function dck_render_profile( $post_id ) {
 		}
 	}
 
-	// Which main-column panes have content? Order defines tab + stack order.
-	$has_about = '' !== trim( wp_strip_all_tags( $about ) );
-	$pane_defs = array(
-		'about'       => array( 'show' => $has_about,                   'tab' => __( 'About', 'dck-directory' ) ),
-		'services'    => array( 'show' => ( $premium && $services ),    'tab' => __( 'Services', 'dck-directory' ) ),
-		'reviews'     => array( 'show' => ( $premium && $count ),       'tab' => __( 'Reviews', 'dck-directory' ) ),
-		'cities'      => array( 'show' => ( $premium && $area_cities ), 'tab' => __( 'Cities served', 'dck-directory' ) ),
-		'credentials' => array( 'show' => $has_details,                 'tab' => __( 'Credentials', 'dck-directory' ) ),
-		'faq'         => array( 'show' => ( $premium && $faq ),         'tab' => __( 'FAQ', 'dck-directory' ) ),
-	);
-	$active_panes = array();
-	foreach ( $pane_defs as $key => $d ) {
-		if ( $d['show'] ) {
-			$active_panes[ $key ] = $d['tab'];
-		}
-	}
-	$tabbed    = count( $active_panes ) >= 2;
-	$first_key = $active_panes ? array_key_first( $active_panes ) : '';
+	// Two tabs only: "About" (which stacks About, Services, Cities, Credentials,
+	// and FAQ) and "Reviews". The tab bar only shows when both groups have
+	// content; otherwise panes stack (keeps free listings consistent).
+	$has_about     = '' !== trim( wp_strip_all_tags( $about ) );
+	$has_reviews   = $premium && $count;
+	$about_group   = $has_about || ( $premium && $services ) || ( $premium && $area_cities ) || $has_details || ( $premium && $faq );
+	$tabbed        = $about_group && $has_reviews;
 
 	// Lightbox: full-size URLs for every gallery image.
 	$lightbox = array();
@@ -341,34 +345,73 @@ function dck_render_profile( $post_id ) {
 
 			<?php if ( $tabbed ) : ?>
 			<div class="dck-tabs" role="tablist">
-				<?php foreach ( $active_panes as $key => $label ) : ?>
-					<button type="button" class="dck-tab" data-tab="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $label ); ?></button>
-				<?php endforeach; ?>
+				<button type="button" class="dck-tab" data-tab="about"><?php esc_html_e( 'About', 'dck-directory' ); ?></button>
+				<button type="button" class="dck-tab" data-tab="reviews"><?php esc_html_e( 'Reviews', 'dck-directory' ); ?></button>
 			</div>
 			<?php endif; ?>
 
 			<div class="dck-cols">
 				<div class="dck-main<?php echo $tabbed ? ' dck-tabbed' : ''; ?>">
 
-					<?php if ( $has_about ) : ?>
-					<section class="dck-card dck-pane" data-pane="about">
-						<h2><?php echo esc_html( dck_setting( 'profile_about_heading' ) ); ?></h2>
-						<?php echo wp_kses_post( $about ); ?>
-					</section>
-					<?php endif; ?>
+					<?php if ( $about_group ) : ?>
+					<div class="dck-pane" data-pane="about">
 
-					<?php if ( $premium && $services ) : ?>
-					<section class="dck-card dck-pane" data-pane="services">
-						<h2><?php echo esc_html( dck_setting( 'profile_services_heading' ) ); ?></h2>
-						<ul class="dck-svc-grid">
-							<?php foreach ( $services as $s ) : ?>
-							<li><?php echo $svg_check; // phpcs:ignore ?><?php echo esc_html( $s ); ?></li>
+						<?php if ( $has_about ) : ?>
+						<section class="dck-card">
+							<h2><?php echo esc_html( dck_setting( 'profile_about_heading' ) ); ?></h2>
+							<?php echo wp_kses_post( $about ); ?>
+						</section>
+						<?php endif; ?>
+
+						<?php if ( $premium && $services ) : ?>
+						<section class="dck-card">
+							<h2><?php echo esc_html( dck_setting( 'profile_services_heading' ) ); ?></h2>
+							<ul class="dck-svc-grid">
+								<?php foreach ( $services as $s ) : ?>
+								<li><?php echo $svg_check; // phpcs:ignore ?><?php echo esc_html( $s ); ?></li>
+								<?php endforeach; ?>
+							</ul>
+						</section>
+						<?php endif; ?>
+
+						<?php if ( $premium && $area_cities ) : ?>
+						<section class="dck-card">
+							<h2><?php echo esc_html( dck_setting( 'profile_area_heading' ) ); ?></h2>
+							<div class="dck-area-cities">
+								<?php foreach ( $area_cities as $c ) : ?><span class="dck-chip dck-chip--plain"><?php echo esc_html( $c ); ?></span><?php endforeach; ?>
+							</div>
+						</section>
+						<?php endif; ?>
+
+						<?php if ( $has_details ) : ?>
+						<section class="dck-card">
+							<h2><?php echo esc_html( dck_setting( 'profile_credentials_heading' ) ); ?></h2>
+							<div class="dck-details">
+								<?php foreach ( $details as $k => $l ) :
+									$v = DCK_Fields::get( $post_id, $k );
+									if ( ! $v ) { continue; } ?>
+									<div><small><?php echo esc_html( $l ); ?></small><b><?php echo esc_html( $v ); ?></b></div>
+								<?php endforeach; ?>
+							</div>
+						</section>
+						<?php endif; ?>
+
+						<?php if ( $premium && $faq ) : ?>
+						<section class="dck-card">
+							<h2><?php echo esc_html( dck_setting( 'profile_faq_heading' ) ); ?></h2>
+							<?php foreach ( $faq as $f ) : ?>
+							<details class="dck-faq">
+								<summary><?php echo esc_html( $f['q'] ); ?></summary>
+								<p><?php echo esc_html( $f['a'] ); ?></p>
+							</details>
 							<?php endforeach; ?>
-						</ul>
-					</section>
+						</section>
+						<?php endif; ?>
+
+					</div>
 					<?php endif; ?>
 
-					<?php if ( $premium && $count ) : ?>
+					<?php if ( $has_reviews ) : ?>
 					<section class="dck-card dck-pane" data-pane="reviews" id="dck-reviews">
 						<h2><?php echo esc_html( dck_setting( 'profile_reviews_heading' ) ); ?></h2>
 						<div class="dck-rev-summary">
@@ -397,40 +440,6 @@ function dck_render_profile( $post_id ) {
 							<div class="dck-owner-reply"><b><?php esc_html_e( 'Response from the owner', 'dck-directory' ); ?></b><?php echo esc_html( $r['reply'] ); ?></div>
 							<?php endif; ?>
 						</article>
-						<?php endforeach; ?>
-					</section>
-					<?php endif; ?>
-
-					<?php if ( $premium && $area_cities ) : ?>
-					<section class="dck-card dck-pane" data-pane="cities">
-						<h2><?php echo esc_html( dck_setting( 'profile_area_heading' ) ); ?></h2>
-						<div class="dck-area-cities">
-							<?php foreach ( $area_cities as $c ) : ?><span class="dck-chip dck-chip--plain"><?php echo esc_html( $c ); ?></span><?php endforeach; ?>
-						</div>
-					</section>
-					<?php endif; ?>
-
-					<?php if ( $has_details ) : ?>
-					<section class="dck-card dck-pane" data-pane="credentials">
-						<h2><?php echo esc_html( dck_setting( 'profile_credentials_heading' ) ); ?></h2>
-						<div class="dck-details">
-							<?php foreach ( $details as $k => $l ) :
-								$v = DCK_Fields::get( $post_id, $k );
-								if ( ! $v ) { continue; } ?>
-								<div><small><?php echo esc_html( $l ); ?></small><b><?php echo esc_html( $v ); ?></b></div>
-							<?php endforeach; ?>
-						</div>
-					</section>
-					<?php endif; ?>
-
-					<?php if ( $premium && $faq ) : ?>
-					<section class="dck-card dck-pane" data-pane="faq">
-						<h2><?php echo esc_html( dck_setting( 'profile_faq_heading' ) ); ?></h2>
-						<?php foreach ( $faq as $f ) : ?>
-						<details class="dck-faq">
-							<summary><?php echo esc_html( $f['q'] ); ?></summary>
-							<p><?php echo esc_html( $f['a'] ); ?></p>
-						</details>
 						<?php endforeach; ?>
 					</section>
 					<?php endif; ?>

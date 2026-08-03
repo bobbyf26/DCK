@@ -33,16 +33,11 @@ class DCK_Post_Types {
 	}
 
 	/**
-	 * Seed default terms once per plugin version. Idempotent: only inserts
-	 * terms that don't already exist, so deleting a default won't resurrect it
-	 * until the version changes again.
+	 * Seed default terms. seed_default_services() self-guards with a one-time
+	 * flag, so this can fire on every load without resurrecting deleted terms.
 	 */
 	public function maybe_seed() {
-		if ( get_option( 'dck_seed_version' ) === DCK_DIR_VERSION ) {
-			return;
-		}
 		$this->seed_default_services();
-		update_option( 'dck_seed_version', DCK_DIR_VERSION, false );
 	}
 
 	/**
@@ -150,47 +145,54 @@ class DCK_Post_Types {
 	}
 
 	/**
-	 * Seed default terms for both taxonomies on first activation.
-	 * Only inserts terms that don't already exist, so it's safe to re-run.
+	 * Seed default terms ONCE, ever (guarded by the dck_services_seeded flag).
+	 * After the first run, deleted terms stay deleted — activations and updates
+	 * never resurrect them. Terms are matched by slug so we never duplicate an
+	 * existing term whose display name has since been edited.
 	 */
 	public function seed_default_services() {
+		if ( get_option( 'dck_services_seeded' ) ) {
+			return;
+		}
+
+		// The nine production coating systems. Slugs are stable identifiers —
+		// do not change them; the display name is what shows in the UI.
 		$coating_systems = array(
-			'Epoxy Coatings',
-			'Polyaspartic / Polyurea',
-			'Flake / Chip System',
-			'Quartz System',
-			'Metallic Marble',
-			'Polished Concrete',
-			'Stained Concrete',
-			'Stamped Concrete',
-			'Concrete Overlays',
-			'Concrete Wood',
-			'Protect & Seal',
-			'Basement Waterproofing',
+			'basement-waterproofing' => 'Basement Waterproofing',
+			'concrete-wood'          => 'Concrete Wood',
+			'epoxy-coatings'         => 'Epoxy Flake',
+			'resinous-system'        => 'Resinous Coatings',
+			'metallic-marble'        => 'Metallic Marble Stain',
+			'polished-concrete'      => 'Polished Concrete',
+			'polyaspartic-polyurea'  => 'Graniflex',
+			'protect-seal'           => 'Protect and Seal',
+			'quartz-system'          => 'Quartz Coatings',
 		);
-		foreach ( $coating_systems as $name ) {
-			if ( ! term_exists( $name, self::TAX_SERVICE ) ) {
-				wp_insert_term( $name, self::TAX_SERVICE );
+		foreach ( $coating_systems as $slug => $name ) {
+			if ( ! term_exists( $slug, self::TAX_SERVICE ) ) {
+				wp_insert_term( $name, self::TAX_SERVICE, array( 'slug' => $slug ) );
 			}
 		}
 
 		$service_areas = array(
-			'Garage Floors',
-			'Patios',
-			'Pool Decks',
-			'Driveways',
-			'Walkways & Sidewalks',
-			'Basements',
-			'Interior Floors',
-			'Commercial',
-			'Industrial',
-			'Warehouses',
-			'Retail Spaces',
+			'garage-floors'        => 'Garage Floors',
+			'patios'               => 'Patios',
+			'pool-decks'           => 'Pool Decks',
+			'driveways'            => 'Driveways',
+			'walkways-sidewalks'   => 'Walkways & Sidewalks',
+			'basements'            => 'Basements',
+			'interior-floors'      => 'Interior Floors',
+			'commercial'           => 'Commercial',
+			'industrial'           => 'Industrial',
+			'warehouses'           => 'Warehouses',
+			'retail-spaces'        => 'Retail Spaces',
 		);
-		foreach ( $service_areas as $name ) {
-			if ( ! term_exists( $name, self::TAX_AREA ) ) {
-				wp_insert_term( $name, self::TAX_AREA );
+		foreach ( $service_areas as $slug => $name ) {
+			if ( ! term_exists( $slug, self::TAX_AREA ) ) {
+				wp_insert_term( $name, self::TAX_AREA, array( 'slug' => $slug ) );
 			}
 		}
+
+		update_option( 'dck_services_seeded', '1', false );
 	}
 }

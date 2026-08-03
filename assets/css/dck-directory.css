@@ -4,7 +4,7 @@
    clean blue/white, light theme, generous cards.
 ============================================================ */
 
-.dck-profile, .dck-directory-page, .dck-form-page {
+.dck-profile, .dck-directory-page, .dck-form-page, .dck-login-modal {
   --dck-brand: #1E62B4;
   --dck-brand-deep: #14406F;
   --dck-brand-soft: #E7EFF9;
@@ -286,7 +286,11 @@ a.dck-card:hover { border-color: var(--dck-brand); transform: translateY(-2px); 
 .dck-locked-note { color: var(--dck-muted); font-size: 13px; margin-top: -6px; }
 .dck-premium-section fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 14px; }
 .dck-current-logo img { border-radius: 10px; margin-top: 6px; }
-.dck-save-bar { position: sticky; bottom: 0; padding: 14px 0; background: linear-gradient(transparent, var(--dck-ground) 40%); }
+.dck-save-bar { position: sticky; bottom: 0; padding: 14px 0; background: linear-gradient(transparent, var(--dck-ground) 40%); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+@media (max-width: 780px) {
+  .dck-save-bar { position: sticky; bottom: 0; margin: 0 -20px; padding: 12px 20px calc(12px + env(safe-area-inset-bottom)); background: var(--dck-card); border-top: 1px solid var(--dck-line); box-shadow: 0 -6px 20px rgba(16,24,40,.1); z-index: 20; }
+  .dck-save-bar .dck-btn { flex: 1; }
+}
 @media (max-width: 640px) { .dck-grid2 { grid-template-columns: 1fr; } }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -412,3 +416,38 @@ html { scroll-behavior: smooth; }
   .dck-callbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9990; background: #fff; margin: 0; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); box-shadow: 0 -6px 20px rgba(16,24,40,.12); display: flex; gap: 10px; align-items: stretch; }
   body { padding-bottom: 78px; }
 }
+
+/* ============================================================
+   SINGLE PROFILE — full-width breakout + theme cleanup
+   (baked in from Cowork's custom_css overlays)
+============================================================ */
+/* Break the profile out of the theme's narrow (~768px) article wrapper. */
+.single-dck_contractor .dck-profile {
+  position: relative; width: 100vw; left: 50%; margin-left: -50vw;
+  background: var(--dck-ground); padding: 8px 0 40px;
+}
+body.single-dck_contractor { overflow-x: hidden; }
+/* The avatar + mosaic handle imagery — hide the theme's featured-image echo. */
+.single-dck_contractor img.wp-post-image { display: none !important; }
+/* Don't send visitors to other posts (competitors) from a profile. */
+.single-dck_contractor .post-navigation,
+.single-dck_contractor .posts-navigation,
+.single-dck_contractor .nav-links,
+.single-dck_contractor .post-nav,
+.single-dck_contractor .wp-block-post-navigation-link { display: none !important; }
+
+/* ============================================================
+   SITEWIDE LOGIN MODAL
+============================================================ */
+.dck-login-modal { display: none; position: fixed; inset: 0; z-index: 100000; background: rgba(10,12,16,.6); align-items: center; justify-content: center; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+.dck-login-modal.open { display: flex; }
+.dck-login-card { position: relative; background: var(--dck-card); color: var(--dck-ink); border-radius: 14px; padding: 28px 26px 22px; width: 100%; max-width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+.dck-login-card h2 { margin: 0 0 16px; font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
+.dck-login-close { position: absolute; top: 12px; right: 14px; width: 32px; height: 32px; border: 0; background: none; font-size: 24px; line-height: 1; color: var(--dck-muted); cursor: pointer; border-radius: 8px; }
+.dck-login-close:hover { background: var(--dck-ground); color: var(--dck-ink); }
+.dck-login-form { display: grid; gap: 12px; }
+.dck-login-form > label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 600; color: var(--dck-ink); }
+.dck-login-form input[type="text"], .dck-login-form input[type="password"] { padding: 11px 12px; border: 1px solid var(--dck-line); border-radius: 8px; background: var(--dck-ground); color: var(--dck-ink); font: inherit; font-size: 14px; }
+.dck-login-remember { flex-direction: row !important; align-items: center; gap: 8px; font-weight: 400 !important; }
+.dck-login-form .dck-btn { width: 100%; text-align: center; margin-top: 4px; }
+.dck-login-links { margin: 14px 0 0; font-size: 13px; text-align: center; color: var(--dck-muted); }

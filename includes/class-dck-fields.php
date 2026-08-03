@@ -25,26 +25,71 @@ class DCK_Fields {
 
 	private function __construct() {
 		add_action( 'init', array( $this, 'register_meta' ) );
-		// Ensure every contractor has _dck_tier and _dck_featured meta, so the
-		// featured-ordering search query never excludes a listing (and REST-
+		// Ensure every contractor has _dck_tier, _dck_featured and _dck_rating_avg
+		// meta, so the ordering search query never excludes a listing (and REST-
 		// created listings behave consistently).
 		add_action( 'save_post_' . DCK_Post_Types::POST_TYPE, array( $this, 'ensure_defaults' ), 20, 1 );
+		// One-time backfill of those meta on existing listings after an update.
+		add_action( 'init', array( $this, 'maybe_backfill' ), 21 );
 	}
 
 	/**
-	 * Guarantee the tier/featured meta rows exist on a listing.
+	 * Guarantee the tier / featured / rating-average meta rows exist on a
+	 * listing, and keep the rating average in sync with the reviews.
 	 */
 	public function ensure_defaults( $post_id ) {
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
 			return;
 		}
+		if ( get_post_type( $post_id ) !== DCK_Post_Types::POST_TYPE ) {
+			return;
+		}
 		if ( '' === get_post_meta( $post_id, '_dck_tier', true ) ) {
 			update_post_meta( $post_id, '_dck_tier', 'free' );
 		}
-		if ( '' === get_post_meta( $post_id, '_dck_featured', true )
-			&& ! metadata_exists( 'post', $post_id, '_dck_featured' ) ) {
+		if ( ! metadata_exists( 'post', $post_id, '_dck_featured' ) ) {
 			update_post_meta( $post_id, '_dck_featured', '' );
 		}
+		update_post_meta( $post_id, '_dck_rating_avg', self::compute_rating_avg( $post_id ) );
+	}
+
+	/**
+	 * Average review rating (0.0–5.0) from the _dck_reviews JSON, as a string.
+	 */
+	public static function compute_rating_avg( $post_id ) {
+		$reviews = self::get_json( $post_id, 'reviews', false );
+		$count   = 0;
+		$sum     = 0;
+		foreach ( (array) $reviews as $r ) {
+			$rt = isset( $r['rating'] ) ? (int) $r['rating'] : 0;
+			if ( $rt > 0 ) {
+				$count++;
+				$sum += $rt;
+			}
+		}
+		return $count ? (string) round( $sum / $count, 2 ) : '0';
+	}
+
+	/**
+	 * Backfill tier/featured/rating meta across all existing listings once per
+	 * version, so pre-existing posts sort correctly without a manual re-save.
+	 */
+	public function maybe_backfill() {
+		if ( get_option( 'dck_backfill_ver' ) === DCK_DIR_VERSION ) {
+			return;
+		}
+		$ids = get_posts(
+			array(
+				'post_type'      => DCK_Post_Types::POST_TYPE,
+				'post_status'    => 'any',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+			)
+		);
+		foreach ( $ids as $id ) {
+			$this->ensure_defaults( $id );
+		}
+		update_option( 'dck_backfill_ver', DCK_DIR_VERSION, false );
 	}
 
 	/**
@@ -100,15 +145,20 @@ class DCK_Fields {
 				array(
 					'single'        => true,
 					'type'          => 'string',
-					'show_in_rest'  => false,
+					'show_in_rest'  => true,
 					'auth_callback' => function() {
 						return current_user_can( 'edit_posts' );
 					},
 				)
 			);
 		}
-		register_post_meta( DCK_Post_Types::POST_TYPE, '_dck_tier', array( 'single' => true, 'type' => 'string' ) );
-		register_post_meta( DCK_Post_Types::POST_TYPE, '_dck_featured', array( 'single' => true, 'type' => 'string' ) );
+		// Plan controls: readable over REST, writable only by admins.
+		$admin_auth = function() {
+			return current_user_can( 'manage_options' );
+		};
+		register_post_meta( DCK_Post_Types::POST_TYPE, '_dck_tier', array( 'single' => true, 'type' => 'string', 'show_in_rest' => true, 'auth_callback' => $admin_auth ) );
+		register_post_meta( DCK_Post_Types::POST_TYPE, '_dck_featured', array( 'single' => true, 'type' => 'string', 'show_in_rest' => true, 'auth_callback' => $admin_auth ) );
+		register_post_meta( DCK_Post_Types::POST_TYPE, '_dck_rating_avg', array( 'single' => true, 'type' => 'string', 'show_in_rest' => true, 'auth_callback' => $admin_auth ) );
 	}
 
 	/* ---------------------------------------------------------------------

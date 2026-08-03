@@ -271,8 +271,8 @@ class DCK_Demo {
 				'featured' => true,
 				'state'    => 'Texas',
 				'city'     => 'Austin',
-				'about'    => 'Lone Star Garage Coatings has been transforming Austin-area garages since 2012. Our crews install full-broadcast flake and polyaspartic systems engineered for Texas heat, with one-day installs and industry-leading adhesion. From two-car garages to commercial showrooms, every floor is prepped with diamond grinding and finished with a UV-stable topcoat.',
-				'systems'  => array( 'epoxy-coatings', 'flake-chip-system', 'polyaspartic-polyurea' ),
+				'about'    => 'Lone Star Garage Coatings has been transforming Austin-area garages since 2012. Our crews install full-broadcast resinous and Graniflex systems engineered for Texas heat, with one-day installs and industry-leading adhesion. From two-car garages to commercial showrooms, every floor is prepped with diamond grinding and finished with a UV-stable topcoat.',
+				'systems'  => array( 'epoxy-coatings', 'resinous-system', 'polyaspartic-polyurea' ),
 				'areas'    => array( 'garage-floors', 'driveways', 'commercial' ),
 				'meta'     => array(
 					'phone'          => '(512) 555-0142',
@@ -293,7 +293,7 @@ class DCK_Demo {
 					'payment'        => 'Card, check, financing available',
 					'free_estimates' => 'Yes',
 					'warranty'       => '15-year adhesion warranty',
-					'services_list'  => "Full-broadcast flake garage floors\nOne-day polyaspartic systems\nCommercial epoxy flooring\nConcrete grinding & prep\nDriveway resurfacing\nMoisture mitigation",
+					'services_list'  => "Full-broadcast resinous garage floors\nOne-day Graniflex systems\nCommercial epoxy flooring\nConcrete grinding & prep\nDriveway resurfacing\nMoisture mitigation",
 				),
 				'hours'    => array( null, array( '07:00', '18:00' ), array( '07:00', '18:00' ), array( '07:00', '18:00' ), array( '07:00', '18:00' ), array( '07:00', '18:00' ), array( '08:00', '14:00' ) ),
 				'faq'      => array(
@@ -303,8 +303,8 @@ class DCK_Demo {
 				),
 				'reviews'  => array(
 					array( 'name' => 'Marcus T.', 'location' => 'Round Rock, TX', 'date' => 'March 2026', 'rating' => 5, 'text' => 'Crew showed up at 7am, floor was done by 4. Looks like a showroom.', 'tag' => 'Garage floor', 'reply' => 'Thanks Marcus — enjoy the new floor!' ),
-					array( 'name' => 'Dana W.', 'location' => 'Austin, TX', 'date' => 'January 2026', 'rating' => 5, 'text' => 'Got three bids and Lone Star was the most thorough on prep. You can tell it matters.', 'tag' => 'Flake system', 'reply' => '' ),
-					array( 'name' => 'Priya K.', 'location' => 'Cedar Park, TX', 'date' => 'November 2025', 'rating' => 4, 'text' => 'Great result. Scheduling took a bit longer than quoted but the work is flawless.', 'tag' => 'Polyaspartic', 'reply' => '' ),
+					array( 'name' => 'Dana W.', 'location' => 'Austin, TX', 'date' => 'January 2026', 'rating' => 5, 'text' => 'Got three bids and Lone Star was the most thorough on prep. You can tell it matters.', 'tag' => 'Resinous system', 'reply' => '' ),
+					array( 'name' => 'Priya K.', 'location' => 'Cedar Park, TX', 'date' => 'November 2025', 'rating' => 4, 'text' => 'Great result. Scheduling took a bit longer than quoted but the work is flawless.', 'tag' => 'Graniflex', 'reply' => '' ),
 					array( 'name' => 'James R.', 'location' => 'Georgetown, TX', 'date' => 'August 2025', 'rating' => 5, 'text' => "Second house we've used them on. Consistent both times.", 'tag' => 'Garage floor', 'reply' => '' ),
 				),
 			),
@@ -355,8 +355,8 @@ class DCK_Demo {
 				'featured' => false,
 				'state'    => 'Florida',
 				'city'     => 'Tampa',
-				'about'    => 'Sunshine State Coatings installs slip-resistant quartz and flake systems across Tampa Bay pool decks, lanais, and patios. Our Protect and Seal packages guard against salt air, UV fade, and hurricane-season moisture, keeping outdoor concrete looking new in the Florida sun.',
-				'systems'  => array( 'quartz-system', 'flake-chip-system', 'protect-seal' ),
+				'about'    => 'Sunshine State Coatings installs slip-resistant quartz and resinous systems across Tampa Bay pool decks, lanais, and patios. Our Protect and Seal packages guard against salt air, UV fade, and hurricane-season moisture, keeping outdoor concrete looking new in the Florida sun.',
+				'systems'  => array( 'quartz-system', 'resinous-system', 'protect-seal' ),
 				'areas'    => array( 'pool-decks', 'patios', 'walkways-sidewalks' ),
 				'meta'     => array(
 					'phone'          => '(813) 555-0168',
@@ -376,7 +376,7 @@ class DCK_Demo {
 					'payment'        => 'Card, financing available',
 					'free_estimates' => 'Yes',
 					'warranty'       => '12-year UV-fade & adhesion warranty',
-					'services_list'  => "Slip-resistant quartz pool decks\nLanai & patio flake systems\nProtect and Seal exterior packages\nUV-stable topcoats\nCool-touch deck coatings\nPressure washing & resealing",
+					'services_list'  => "Slip-resistant quartz pool decks\nLanai & patio resinous systems\nProtect and Seal exterior packages\nUV-stable topcoats\nCool-touch deck coatings\nPressure washing & resealing",
 				),
 				'hours'    => array( null, array( '07:00', '19:00' ), array( '07:00', '19:00' ), array( '07:00', '19:00' ), array( '07:00', '19:00' ), array( '07:00', '19:00' ), array( '07:00', '19:00' ) ),
 				'faq'      => array(

@@ -32,7 +32,10 @@ class DCK_Ajax {
 	 * keyword. Featured premium listings float to the top.
 	 */
 	public function search() {
-		check_ajax_referer( 'dck_dir_nonce', 'nonce' );
+		// Read-only, public data. Tolerate an expired/invalid nonce so a visitor
+		// served a stale (LiteSpeed-cached) page still gets results instead of a
+		// silent -1. The nonce is still checked (best effort) but never fatal.
+		check_ajax_referer( 'dck_dir_nonce', 'nonce', false );
 
 		$service  = isset( $_POST['service'] ) ? sanitize_title( wp_unslash( $_POST['service'] ) ) : '';
 		$area     = isset( $_POST['area'] ) ? sanitize_title( wp_unslash( $_POST['area'] ) ) : '';
@@ -70,16 +73,23 @@ class DCK_Ajax {
 			'posts_per_page' => 12,
 			'paged'          => $paged,
 			's'              => $keyword,
-			// Featured listings float to the top, then newest. Use a NAMED
-			// meta_query clause for the ordering (not a top-level meta_key,
-			// which would force an INNER JOIN and drop any listing that has no
-			// _dck_featured meta). The OR + NOT EXISTS keeps those listings in.
+			// Default ranking: featured first, then premium tier, then average
+			// review rating, then newest. Named meta_query clauses drive the
+			// ordering. Every published listing is guaranteed to have these three
+			// meta rows (DCK_Fields::ensure_defaults on save + a one-time
+			// backfill), so requiring EXISTS here never drops a listing.
 			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery
-				'relation'        => 'OR',
+				'relation'        => 'AND',
 				'featured_clause' => array( 'key' => '_dck_featured', 'compare' => 'EXISTS' ),
-				array( 'key' => '_dck_featured', 'compare' => 'NOT EXISTS' ),
+				'tier_clause'     => array( 'key' => '_dck_tier', 'compare' => 'EXISTS' ),
+				'rating_clause'   => array( 'key' => '_dck_rating_avg', 'type' => 'DECIMAL', 'compare' => 'EXISTS' ),
 			),
-			'orderby'        => array( 'featured_clause' => 'DESC', 'date' => 'DESC' ),
+			'orderby'        => array(
+				'featured_clause' => 'DESC',
+				'tier_clause'     => 'DESC',
+				'rating_clause'   => 'DESC',
+				'date'            => 'DESC',
+			),
 		);
 		if ( count( $tax_query ) > 1 ) {
 			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery

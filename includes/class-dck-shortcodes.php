@@ -62,9 +62,9 @@ class DCK_Shortcodes {
 							</select>
 						</div>
 						<div class="dck-field">
-							<label><?php esc_html_e( 'Area', 'dck-directory' ); ?></label>
+							<label><?php esc_html_e( 'Project type', 'dck-directory' ); ?></label>
 							<select name="area" data-search-area>
-								<option value=""><?php esc_html_e( 'All areas', 'dck-directory' ); ?></option>
+								<option value=""><?php esc_html_e( 'All project types', 'dck-directory' ); ?></option>
 								<?php foreach ( $areas as $t ) : ?>
 									<option value="<?php echo esc_attr( $t->slug ); ?>" <?php selected( $sel_area, $t->slug ); ?>><?php echo esc_html( $t->name ); ?></option>
 								<?php endforeach; ?>
@@ -247,6 +247,7 @@ class DCK_Shortcodes {
 						<?php if ( 'publish' === $listing->post_status ) : ?>
 							<a href="<?php echo esc_url( get_permalink( $post_id ) ); ?>" target="_blank"><?php esc_html_e( 'View live profile ↗', 'dck-directory' ); ?></a>
 						<?php else : ?>
+							<a href="<?php echo esc_url( dck_listing_preview_url( $post_id ) ); ?>" target="_blank"><?php esc_html_e( 'View my listing ↗', 'dck-directory' ); ?></a>
 							<span class="dck-pill-pending"><?php esc_html_e( 'Pending review', 'dck-directory' ); ?></span>
 						<?php endif; ?>
 						<span class="dck-plan-badge dck-plan-<?php echo esc_attr( $premium ? 'premium' : 'free' ); ?>"><?php echo esc_html( $premium ? __( 'Premium', 'dck-directory' ) : __( 'Free plan', 'dck-directory' ) ); ?></span>
@@ -338,6 +339,10 @@ class DCK_Shortcodes {
 
 					<div class="dck-save-bar">
 						<button class="dck-btn" type="submit"><?php echo esc_html( dck_setting( 'dash_save_button' ) ); ?></button>
+						<?php
+						$view_url = ( 'publish' === $listing->post_status ) ? get_permalink( $post_id ) : dck_listing_preview_url( $post_id );
+						?>
+						<a class="dck-btn dck-btn--ghost" href="<?php echo esc_url( $view_url ); ?>" target="_blank"><?php esc_html_e( 'View my listing ↗', 'dck-directory' ); ?></a>
 					</div>
 				</form>
 			</div>
