@@ -65,7 +65,9 @@ class DCK_Post_Types {
 				'menu_icon'    => 'dashicons-building',
 				'menu_position' => 25,
 				'rewrite'      => array( 'slug' => 'contractor', 'with_front' => false ),
-				'supports'     => array( 'title', 'editor', 'thumbnail', 'author' ),
+				// 'custom-fields' is required for register_post_meta( show_in_rest )
+				// to actually surface the _dck_* meta over the REST API.
+				'supports'     => array( 'title', 'editor', 'thumbnail', 'author', 'custom-fields' ),
 				'show_in_rest' => true,
 			)
 		);

@@ -434,7 +434,8 @@ body.single-dck_contractor { overflow-x: hidden; }
 .single-dck_contractor .posts-navigation,
 .single-dck_contractor .nav-links,
 .single-dck_contractor .post-nav,
-.single-dck_contractor .wp-block-post-navigation-link { display: none !important; }
+.single-dck_contractor .wp-block-post-navigation-link,
+.single-dck_contractor nav[aria-label="Post navigation"] { display: none !important; }
 
 /* ============================================================
    SITEWIDE LOGIN MODAL

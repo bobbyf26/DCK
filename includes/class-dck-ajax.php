@@ -82,7 +82,9 @@ class DCK_Ajax {
 				'relation'        => 'AND',
 				'featured_clause' => array( 'key' => '_dck_featured', 'compare' => 'EXISTS' ),
 				'tier_clause'     => array( 'key' => '_dck_tier', 'compare' => 'EXISTS' ),
-				'rating_clause'   => array( 'key' => '_dck_rating_avg', 'type' => 'DECIMAL', 'compare' => 'EXISTS' ),
+				// DECIMAL(10,2), not bare DECIMAL — WP casts bare DECIMAL as
+				// DECIMAL(10,0), truncating 4.67/4.75 to 4 and killing the tiebreak.
+				'rating_clause'   => array( 'key' => '_dck_rating_avg', 'type' => 'DECIMAL(10,2)', 'compare' => 'EXISTS' ),
 			),
 			'orderby'        => array(
 				'featured_clause' => 'DESC',
