@@ -29,8 +29,24 @@ class DCK_Fields {
 		// meta, so the ordering search query never excludes a listing (and REST-
 		// created listings behave consistently).
 		add_action( 'save_post_' . DCK_Post_Types::POST_TYPE, array( $this, 'ensure_defaults' ), 20, 1 );
+		// Geocode the address → lat/lng on save (single listing only — never in
+		// the batch backfill, which would fire an HTTP request per listing).
+		add_action( 'save_post_' . DCK_Post_Types::POST_TYPE, array( $this, 'geocode_on_save' ), 30, 1 );
 		// One-time backfill of those meta on existing listings after an update.
 		add_action( 'init', array( $this, 'maybe_backfill' ), 21 );
+	}
+
+	/**
+	 * Geocode a single listing on save (guards autosave/revisions).
+	 */
+	public function geocode_on_save( $post_id ) {
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+		if ( wp_is_post_revision( $post_id ) || get_post_type( $post_id ) !== DCK_Post_Types::POST_TYPE ) {
+			return;
+		}
+		dck_maybe_geocode_listing( $post_id );
 	}
 
 	/**
@@ -106,6 +122,10 @@ class DCK_Fields {
 			'state'          => array( 'label' => 'State', 'type' => 'text', 'tier' => 'free' ),
 			'zip'            => array( 'label' => 'ZIP', 'type' => 'text', 'tier' => 'free' ),
 			'phone'          => array( 'label' => 'Phone', 'type' => 'text', 'tier' => 'free' ),
+			// Map coordinates. Auto-filled by geocoding the address; can be set
+			// manually (admin / REST), which locks out auto-geocoding.
+			'lat'            => array( 'label' => 'Latitude', 'type' => 'text', 'tier' => 'free' ),
+			'lng'            => array( 'label' => 'Longitude', 'type' => 'text', 'tier' => 'free' ),
 
 			// --- Premium tier ---
 			'website'        => array( 'label' => 'Website URL', 'type' => 'url', 'tier' => 'premium' ),

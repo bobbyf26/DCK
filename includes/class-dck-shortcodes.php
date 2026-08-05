@@ -34,12 +34,16 @@ class DCK_Shortcodes {
 
 	public function directory( $atts ) {
 		dck_remember_page( 'directory' );
+
+		// Leaflet for the results map (loaded only on the directory page).
+		wp_enqueue_style( 'leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4' );
+		wp_enqueue_script( 'leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', array(), '1.9.4', true );
+
 		$services = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_SERVICE, 'hide_empty' => false ) );
 		$areas    = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_AREA, 'hide_empty' => false ) );
-		// Only states that actually have published contractors (no empty (0) states).
 		$states   = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_LOCATION, 'parent' => 0, 'hide_empty' => true ) );
 
-		// Pre-selected from query string (e.g. category tile links).
+		// Pre-selected from query string (e.g. links from a category page).
 		$sel_service  = isset( $_GET['service'] ) ? sanitize_title( wp_unslash( $_GET['service'] ) ) : '';
 		$sel_area     = isset( $_GET['area'] ) ? sanitize_title( wp_unslash( $_GET['area'] ) ) : '';
 		$sel_location = isset( $_GET['location'] ) ? sanitize_title( wp_unslash( $_GET['location'] ) ) : '';
@@ -48,30 +52,16 @@ class DCK_Shortcodes {
 		?>
 		<div class="dck-directory-page" data-dck-directory>
 			<div class="dck-wrap">
-				<div class="dck-hero">
+				<div class="dck-hero dck-hero--compact">
 					<h1><?php echo esc_html( dck_setting( 'hero_title' ) ); ?></h1>
 					<p><?php echo esc_html( dck_setting( 'hero_subtitle' ) ); ?></p>
-					<form class="dck-searchbar" data-dck-search>
-						<div class="dck-field">
-							<label><?php esc_html_e( 'Coating system', 'dck-directory' ); ?></label>
-							<select name="service" data-search-service>
-								<option value=""><?php esc_html_e( 'All systems', 'dck-directory' ); ?></option>
-								<?php foreach ( $services as $t ) : ?>
-									<option value="<?php echo esc_attr( $t->slug ); ?>" <?php selected( $sel_service, $t->slug ); ?>><?php echo esc_html( $t->name ); ?></option>
-								<?php endforeach; ?>
-							</select>
-						</div>
-						<div class="dck-field">
-							<label><?php esc_html_e( 'Project type', 'dck-directory' ); ?></label>
-							<select name="area" data-search-area>
-								<option value=""><?php esc_html_e( 'All project types', 'dck-directory' ); ?></option>
-								<?php foreach ( $areas as $t ) : ?>
-									<option value="<?php echo esc_attr( $t->slug ); ?>" <?php selected( $sel_area, $t->slug ); ?>><?php echo esc_html( $t->name ); ?></option>
-								<?php endforeach; ?>
-							</select>
-						</div>
-						<div class="dck-field">
+					<form class="dck-searchbar dck-searchbar--location" data-dck-search>
+						<div class="dck-field dck-field--grow">
 							<label><?php esc_html_e( 'Where', 'dck-directory' ); ?></label>
+							<input type="text" name="keyword" data-search-keyword placeholder="<?php esc_attr_e( 'City or ZIP…', 'dck-directory' ); ?>">
+						</div>
+						<div class="dck-field">
+							<label><?php esc_html_e( 'State', 'dck-directory' ); ?></label>
 							<select name="location" data-search-location>
 								<option value=""><?php esc_html_e( 'All states', 'dck-directory' ); ?></option>
 								<?php foreach ( $states as $t ) : ?>
@@ -79,37 +69,50 @@ class DCK_Shortcodes {
 								<?php endforeach; ?>
 							</select>
 						</div>
-						<div class="dck-field dck-field--grow">
-							<label><?php esc_html_e( 'Keyword / city', 'dck-directory' ); ?></label>
-							<input type="text" name="keyword" data-search-keyword placeholder="<?php esc_attr_e( 'e.g. patio, city name…', 'dck-directory' ); ?>">
-						</div>
 						<button type="submit" class="dck-btn"><?php echo esc_html( dck_setting( 'search_button' ) ); ?></button>
 					</form>
 				</div>
 
-				<?php if ( ! empty( $services ) && ! is_wp_error( $services ) ) : ?>
-				<section class="dck-tiles" aria-label="<?php echo esc_attr( dck_setting( 'systems_heading' ) ); ?>">
-					<h2><?php echo esc_html( dck_setting( 'systems_heading' ) ); ?></h2>
-					<div class="dck-tiles__grid">
-						<?php foreach ( $services as $t ) : ?>
-							<button type="button" class="dck-tile" data-service="<?php echo esc_attr( $t->slug ); ?>">
-								<span class="dck-tile__name"><?php echo esc_html( $t->name ); ?></span>
-								<span class="dck-tile__count"><?php echo esc_html( sprintf( _n( '%d pro', '%d pros', $t->count, 'dck-directory' ), $t->count ) ); ?></span>
-							</button>
-						<?php endforeach; ?>
-					</div>
-				</section>
-				<?php endif; ?>
+				<div class="dck-results-head">
+					<h2 data-results-title><?php echo esc_html( dck_setting( 'results_heading' ) ); ?></h2>
+					<span class="dck-results-count" data-results-count></span>
+					<button type="button" class="dck-map-toggle" data-map-toggle aria-pressed="false"><?php esc_html_e( 'Map', 'dck-directory' ); ?></button>
+				</div>
 
-				<section class="dck-results-wrap">
-					<div class="dck-results-head">
-						<h2 data-results-title><?php echo esc_html( dck_setting( 'results_heading' ) ); ?></h2>
-						<span data-results-count></span>
+				<div class="dck-splitview" data-splitview>
+					<aside class="dck-filters" data-filters>
+						<div class="dck-filters__head">
+							<h3><?php esc_html_e( 'Filters', 'dck-directory' ); ?></h3>
+							<button type="button" class="dck-filter-clear" data-filter-clear><?php esc_html_e( 'Clear', 'dck-directory' ); ?></button>
+						</div>
+						<?php if ( ! empty( $services ) && ! is_wp_error( $services ) ) : ?>
+						<div class="dck-filter-group">
+							<h4><?php echo esc_html( dck_setting( 'systems_heading' ) ); ?></h4>
+							<?php foreach ( $services as $t ) : ?>
+							<label class="dck-check"><input type="checkbox" data-filter-service value="<?php echo esc_attr( $t->slug ); ?>" <?php checked( $sel_service, $t->slug ); ?>> <?php echo esc_html( $t->name ); ?></label>
+							<?php endforeach; ?>
+						</div>
+						<?php endif; ?>
+						<?php if ( ! empty( $areas ) && ! is_wp_error( $areas ) ) : ?>
+						<div class="dck-filter-group">
+							<h4><?php esc_html_e( 'Project type', 'dck-directory' ); ?></h4>
+							<?php foreach ( $areas as $t ) : ?>
+							<label class="dck-check"><input type="checkbox" data-filter-area value="<?php echo esc_attr( $t->slug ); ?>" <?php checked( $sel_area, $t->slug ); ?>> <?php echo esc_html( $t->name ); ?></label>
+							<?php endforeach; ?>
+						</div>
+						<?php endif; ?>
+					</aside>
+
+					<div class="dck-results-col">
+						<div class="dck-results dck-results--list" data-results aria-live="polite"></div>
+						<div class="dck-results-empty" data-results-empty hidden><?php esc_html_e( 'No contractors match your search yet. Try widening your filters.', 'dck-directory' ); ?></div>
+						<div class="dck-loadmore-wrap"><button type="button" class="dck-btn dck-btn--ghost" data-loadmore hidden><?php esc_html_e( 'Load more', 'dck-directory' ); ?></button></div>
 					</div>
-					<div class="dck-results" data-results aria-live="polite"></div>
-					<div class="dck-results-empty" data-results-empty hidden><?php esc_html_e( 'No contractors match your search yet. Try widening your filters.', 'dck-directory' ); ?></div>
-					<div class="dck-loadmore-wrap"><button type="button" class="dck-btn dck-btn--ghost" data-loadmore hidden><?php esc_html_e( 'Load more', 'dck-directory' ); ?></button></div>
-				</section>
+
+					<div class="dck-map-col" data-map-col>
+						<div class="dck-map-canvas" data-dck-map></div>
+					</div>
+				</div>
 
 				<?php if ( ! empty( $states ) && ! is_wp_error( $states ) ) : ?>
 				<section class="dck-states">

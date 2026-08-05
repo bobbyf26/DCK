@@ -37,25 +37,35 @@ class DCK_Ajax {
 		// silent -1. The nonce is still checked (best effort) but never fatal.
 		check_ajax_referer( 'dck_dir_nonce', 'nonce', false );
 
-		$service  = isset( $_POST['service'] ) ? sanitize_title( wp_unslash( $_POST['service'] ) ) : '';
-		$area     = isset( $_POST['area'] ) ? sanitize_title( wp_unslash( $_POST['area'] ) ) : '';
+		// Filters are multi-select (services[]/areas[]); keep back-compat with the
+		// old singular service/area params.
+		$services = $this->slug_list( 'services' );
+		if ( ! $services && isset( $_POST['service'] ) ) {
+			$services = array_filter( array( sanitize_title( wp_unslash( $_POST['service'] ) ) ) );
+		}
+		$areas = $this->slug_list( 'areas' );
+		if ( ! $areas && isset( $_POST['area'] ) ) {
+			$areas = array_filter( array( sanitize_title( wp_unslash( $_POST['area'] ) ) ) );
+		}
 		$location = isset( $_POST['location'] ) ? sanitize_title( wp_unslash( $_POST['location'] ) ) : '';
 		$keyword  = isset( $_POST['keyword'] ) ? sanitize_text_field( wp_unslash( $_POST['keyword'] ) ) : '';
 		$paged    = isset( $_POST['paged'] ) ? max( 1, absint( $_POST['paged'] ) ) : 1;
 
 		$tax_query = array( 'relation' => 'AND' );
-		if ( $service ) {
+		if ( $services ) {
 			$tax_query[] = array(
 				'taxonomy' => DCK_Post_Types::TAX_SERVICE,
 				'field'    => 'slug',
-				'terms'    => $service,
+				'terms'    => $services,
+				'operator' => 'IN',
 			);
 		}
-		if ( $area ) {
+		if ( $areas ) {
 			$tax_query[] = array(
 				'taxonomy' => DCK_Post_Types::TAX_AREA,
 				'field'    => 'slug',
-				'terms'    => $area,
+				'terms'    => $areas,
+				'operator' => 'IN',
 			);
 		}
 		if ( $location ) {
@@ -97,24 +107,53 @@ class DCK_Ajax {
 			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery
 		}
 
-		$q    = new WP_Query( $args );
-		$html = '';
+		$q       = new WP_Query( $args );
+		$html    = '';
+		$markers = array();
 		if ( $q->have_posts() ) {
 			while ( $q->have_posts() ) {
 				$q->the_post();
-				$html .= dck_render_card( get_the_ID() );
+				$id    = get_the_ID();
+				$html .= dck_render_card( $id );
+
+				$lat = get_post_meta( $id, '_dck_lat', true );
+				$lng = get_post_meta( $id, '_dck_lng', true );
+				if ( '' !== (string) $lat && '' !== (string) $lng ) {
+					$markers[] = array(
+						'id'     => $id,
+						'lat'    => (float) $lat,
+						'lng'    => (float) $lng,
+						'name'   => get_the_title( $id ),
+						'url'    => get_permalink( $id ),
+						'rating' => (float) get_post_meta( $id, '_dck_rating_avg', true ),
+						'city'   => trim( get_post_meta( $id, '_dck_city', true ) . ', ' . get_post_meta( $id, '_dck_state', true ), ', ' ),
+						'premium' => DCK_Fields::is_premium( $id ) ? 1 : 0,
+					);
+				}
 			}
 			wp_reset_postdata();
 		}
 
 		wp_send_json_success(
 			array(
-				'html'  => $html,
-				'found' => (int) $q->found_posts,
-				'pages' => (int) $q->max_num_pages,
-				'paged' => $paged,
+				'html'    => $html,
+				'found'   => (int) $q->found_posts,
+				'pages'   => (int) $q->max_num_pages,
+				'paged'   => $paged,
+				'markers' => $markers,
 			)
 		);
+	}
+
+	/**
+	 * Read a POSTed array of slugs (e.g. services[]) as a sanitized list.
+	 */
+	private function slug_list( $key ) {
+		if ( empty( $_POST[ $key ] ) || ! is_array( $_POST[ $key ] ) ) {
+			return array();
+		}
+		$out = array_map( 'sanitize_title', array_map( 'sanitize_text_field', wp_unslash( $_POST[ $key ] ) ) );
+		return array_values( array_filter( array_unique( $out ) ) );
 	}
 
 	/**

@@ -39,6 +39,78 @@ function dck_adjust_hex( $hex, $percent ) {
 }
 
 /**
+ * Geocode a free-text address to [lat, lng] via OpenStreetMap Nominatim.
+ * Results (and misses) are cached in transients so we never hammer the API.
+ * Returns array( 'lat' => string, 'lng' => string ) or null.
+ */
+function dck_geocode( $query ) {
+	$query = trim( preg_replace( '/\s+/', ' ', (string) $query ) );
+	if ( '' === $query ) {
+		return null;
+	}
+	$key    = 'dck_geo_' . md5( $query );
+	$cached = get_transient( $key );
+	if ( false !== $cached ) {
+		return is_array( $cached ) && isset( $cached['lat'] ) ? $cached : null;
+	}
+	$url  = add_query_arg(
+		array( 'q' => rawurlencode( $query ), 'format' => 'json', 'limit' => 1, 'addressdetails' => 0 ),
+		'https://nominatim.openstreetmap.org/search'
+	);
+	// Nominatim requires an identifying User-Agent / referer.
+	$resp = wp_remote_get(
+		$url,
+		array(
+			'timeout' => 8,
+			'headers' => array( 'User-Agent' => 'DCK-Directory/1.8 (' . home_url( '/' ) . '; ' . get_option( 'admin_email' ) . ')' ),
+		)
+	);
+	if ( is_wp_error( $resp ) || 200 !== (int) wp_remote_retrieve_response_code( $resp ) ) {
+		set_transient( $key, 'miss', DAY_IN_SECONDS );
+		return null;
+	}
+	$body = json_decode( wp_remote_retrieve_body( $resp ), true );
+	if ( ! empty( $body[0]['lat'] ) && ! empty( $body[0]['lon'] ) ) {
+		$coords = array( 'lat' => (string) $body[0]['lat'], 'lng' => (string) $body[0]['lon'] );
+		set_transient( $key, $coords, MONTH_IN_SECONDS );
+		return $coords;
+	}
+	set_transient( $key, 'miss', WEEK_IN_SECONDS );
+	return null;
+}
+
+/**
+ * Auto-geocode a listing's address into _dck_lat/_dck_lng when needed.
+ * Skipped when coordinates were set manually (_dck_geo_manual) and only
+ * re-run when the address actually changes (tracked via _dck_geo_hash).
+ */
+function dck_maybe_geocode_listing( $post_id ) {
+	if ( get_post_meta( $post_id, '_dck_geo_manual', true ) ) {
+		return;
+	}
+	$parts = array(
+		get_post_meta( $post_id, '_dck_address', true ),
+		get_post_meta( $post_id, '_dck_city', true ),
+		get_post_meta( $post_id, '_dck_state', true ),
+		get_post_meta( $post_id, '_dck_zip', true ),
+	);
+	$addr = trim( implode( ' ', array_filter( array_map( 'trim', $parts ) ) ) );
+	if ( '' === $addr ) {
+		return;
+	}
+	$hash = md5( $addr );
+	if ( get_post_meta( $post_id, '_dck_geo_hash', true ) === $hash && '' !== (string) get_post_meta( $post_id, '_dck_lat', true ) ) {
+		return; // Unchanged and already located.
+	}
+	update_post_meta( $post_id, '_dck_geo_hash', $hash );
+	$coords = dck_geocode( $addr );
+	if ( $coords ) {
+		update_post_meta( $post_id, '_dck_lat', $coords['lat'] );
+		update_post_meta( $post_id, '_dck_lng', $coords['lng'] );
+	}
+}
+
+/**
  * SVG star row for a given rating (0–5, halves rounded to nearest).
  */
 function dck_stars_html( $rating, $size = 17 ) {

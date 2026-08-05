@@ -452,3 +452,55 @@ body.single-dck_contractor { overflow-x: hidden; }
 .dck-login-remember { flex-direction: row !important; align-items: center; gap: 8px; font-weight: 400 !important; }
 .dck-login-form .dck-btn { width: 100%; text-align: center; margin-top: 4px; }
 .dck-login-links { margin: 14px 0 0; font-size: 13px; text-align: center; color: var(--dck-muted); }
+
+/* ============================================================
+   DIRECTORY v2 — location search, filter rail, results + map
+============================================================ */
+.dck-hero--compact { padding: 6px 0 16px; }
+.dck-hero--compact h1 { margin-bottom: 4px; }
+.dck-searchbar--location { max-width: 820px; }
+
+.dck-results-head { display: flex; align-items: center; gap: 12px; margin: 18px 0 12px; }
+.dck-results-head h2 { margin: 0; }
+.dck-results-count { color: var(--dck-muted); font-size: 14px; }
+.dck-map-toggle { margin-left: auto; display: none; cursor: pointer; background: var(--dck-brand); color: #fff; border: 0; border-radius: 999px; padding: 8px 18px; font: inherit; font-size: 14px; font-weight: 700; }
+
+/* Split view: filters | results | map */
+.dck-splitview { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start; }
+.dck-filters { background: var(--dck-card); border: 1px solid var(--dck-line); border-radius: 12px; padding: 16px 18px; }
+.dck-filters__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.dck-filters__head h3 { margin: 0; font-size: 15px; font-weight: 800; }
+.dck-filter-clear { background: none; border: 0; color: var(--dck-brand); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 0; }
+.dck-filter-group { padding: 12px 0; border-top: 1px solid var(--dck-line); }
+.dck-filter-group h4 { margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--dck-muted); }
+.dck-filter-group .dck-check { display: flex; align-items: center; gap: 8px; font-size: 14px; padding: 3px 0; cursor: pointer; }
+
+.dck-results--list { display: flex; flex-direction: column; gap: 14px; }
+.dck-results--list .dck-card { flex-direction: row; }
+.dck-results--list .dck-card__media { width: 160px; flex: 0 0 160px; height: auto; min-height: 130px; }
+.dck-results--list .dck-card__body { flex: 1; }
+@media (max-width: 520px) {
+  .dck-results--list .dck-card { flex-direction: column; }
+  .dck-results--list .dck-card__media { width: 100%; flex: none; height: 150px; }
+}
+
+.dck-map-col { display: none; }
+.dck-map-canvas { width: 100%; height: 100%; min-height: 420px; border-radius: 14px; overflow: hidden; border: 1px solid var(--dck-line); z-index: 0; }
+.dck-map-canvas .leaflet-popup-content a { color: var(--dck-brand); }
+
+/* Desktop: 3-column with a sticky map */
+@media (min-width: 1025px) {
+  .dck-splitview { grid-template-columns: 230px minmax(0, 1fr) minmax(340px, 40%); gap: 20px; }
+  .dck-filters { position: sticky; top: 20px; }
+  .dck-map-col { display: block; position: sticky; top: 20px; height: calc(100vh - 40px); }
+}
+
+/* Tablet/mobile: filters stack on top; map opens as a fullscreen overlay */
+@media (max-width: 1024px) {
+  .dck-map-toggle { display: inline-block; }
+  .dck-splitview.dck-show-map .dck-map-col {
+    display: block; position: fixed; inset: 0; z-index: 9000; padding: 12px;
+    background: var(--dck-ground);
+  }
+  .dck-splitview.dck-show-map .dck-map-canvas { height: 100%; min-height: 0; }
+}

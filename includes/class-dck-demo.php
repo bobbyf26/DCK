@@ -184,6 +184,8 @@ class DCK_Demo {
 			update_post_meta( $post_id, self::DEMO_META, '1' );
 			update_post_meta( $post_id, '_dck_tier', 'premium' );
 			update_post_meta( $post_id, '_dck_featured', ! empty( $d['featured'] ) ? '1' : '' );
+			// Demo coords are hard-coded, so lock out auto-geocoding.
+			update_post_meta( $post_id, '_dck_geo_manual', '1' );
 
 			// Scalar fields.
 			foreach ( $d['meta'] as $key => $val ) {
@@ -280,6 +282,8 @@ class DCK_Demo {
 					'city'           => 'Austin',
 					'state'          => 'TX',
 					'zip'            => '78758',
+					'lat'            => '30.3900',
+					'lng'            => '-97.7100',
 					'website'        => 'https://lonestargarage.example.com',
 					'email'          => 'quotes@lonestargarage.example.com',
 					'facebook'       => 'https://facebook.com/lonestargaragedemo',
@@ -323,6 +327,8 @@ class DCK_Demo {
 					'city'           => 'Grand Rapids',
 					'state'          => 'MI',
 					'zip'            => '49505',
+					'lat'            => '42.9950',
+					'lng'            => '-85.6600',
 					'website'        => 'https://greatlakesepoxy.example.com',
 					'email'          => 'hello@greatlakesepoxy.example.com',
 					'facebook'       => 'https://facebook.com/greatlakesepoxydemo',
@@ -364,6 +370,8 @@ class DCK_Demo {
 					'city'           => 'Tampa',
 					'state'          => 'FL',
 					'zip'            => '33611',
+					'lat'            => '27.8920',
+					'lng'            => '-82.5090',
 					'website'        => 'https://sunshinecoatings.example.com',
 					'email'          => 'info@sunshinecoatings.example.com',
 					'instagram'      => 'https://instagram.com/sunshinecoatingsdemo',
@@ -406,6 +414,8 @@ class DCK_Demo {
 					'city'           => 'Denver',
 					'state'          => 'CO',
 					'zip'            => '80216',
+					'lat'            => '39.7800',
+					'lng'            => '-104.9770',
 					'website'        => 'https://rockymtnconcrete.example.com',
 					'email'          => 'projects@rockymtnconcrete.example.com',
 					'youtube'        => 'https://youtube.com/@rockymtnconcretedemo',
@@ -447,6 +457,8 @@ class DCK_Demo {
 					'city'           => 'Asheville',
 					'state'          => 'NC',
 					'zip'            => '28801',
+					'lat'            => '35.5990',
+					'lng'            => '-82.5540',
 					'website'        => 'https://blueridgefloors.example.com',
 					'email'          => 'team@blueridgefloors.example.com',
 					'facebook'       => 'https://facebook.com/blueridgefloorsdemo',

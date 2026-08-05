@@ -95,30 +95,69 @@
 		} );
 	}
 
-	/* ---------------- Directory search ---------------- */
+	/* ---------------- Directory search + map ---------------- */
 	function initDirectory() {
 		var root = document.querySelector( '[data-dck-directory]' );
 		if ( ! root ) { return; }
 
-		var form      = root.querySelector( '[data-dck-search]' );
-		var serviceEl = root.querySelector( '[data-search-service]' );
-		var areaEl    = root.querySelector( '[data-search-area]' );
-		var locEl     = root.querySelector( '[data-search-location]' );
+		var form     = root.querySelector( '[data-dck-search]' );
+		var locEl    = root.querySelector( '[data-search-location]' );
 		var kwEl      = root.querySelector( '[data-search-keyword]' );
-		var results   = root.querySelector( '[data-results]' );
-		var countEl   = root.querySelector( '[data-results-count]' );
-		var emptyEl   = root.querySelector( '[data-results-empty]' );
-		var loadmore  = root.querySelector( '[data-loadmore]' );
+		var results  = root.querySelector( '[data-results]' );
+		var countEl  = root.querySelector( '[data-results-count]' );
+		var emptyEl  = root.querySelector( '[data-results-empty]' );
+		var loadmore = root.querySelector( '[data-loadmore]' );
+		var mapEl    = root.querySelector( '[data-dck-map]' );
+		var splitview = root.querySelector( '[data-splitview]' );
 		var paged = 1, maxPages = 1;
 
+		function escapeHtml( s ) {
+			return String( s == null ? '' : s ).replace( /[&<>"']/g, function ( c ) {
+				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ c ];
+			} );
+		}
+		function checkedValues( sel ) {
+			return Array.prototype.map.call( root.querySelectorAll( sel + ':checked' ), function ( c ) { return c.value; } );
+		}
+
 		function params( p ) {
-			return {
-				service: serviceEl ? serviceEl.value : '',
-				area: areaEl ? areaEl.value : '',
-				location: locEl ? locEl.value : '',
-				keyword: kwEl ? kwEl.value : '',
-				paged: p
-			};
+			var d = { location: locEl ? locEl.value : '', keyword: kwEl ? kwEl.value : '', paged: p };
+			checkedValues( '[data-filter-service]' ).forEach( function ( v, i ) { d[ 'services[' + i + ']' ] = v; } );
+			checkedValues( '[data-filter-area]' ).forEach( function ( v, i ) { d[ 'areas[' + i + ']' ] = v; } );
+			return d;
+		}
+
+		/* --- Leaflet map --- */
+		var map = null, markerLayer = null, pending = null, waited = 0;
+		function ensureMap() {
+			if ( map ) { return map; }
+			if ( ! mapEl || typeof window.L === 'undefined' ) { return null; }
+			map = window.L.map( mapEl, { scrollWheelZoom: false } ).setView( [ 39.5, -98.35 ], 4 );
+			window.L.tileLayer( 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' } ).addTo( map );
+			markerLayer = window.L.layerGroup().addTo( map );
+			return map;
+		}
+		function renderMarkers( markers, append ) {
+			var m = ensureMap();
+			if ( ! m ) {
+				// Leaflet not ready yet — retry briefly.
+				pending = markers;
+				if ( waited < 20 ) { waited++; setTimeout( function () { renderMarkers( pending, false ); }, 250 ); }
+				return;
+			}
+			if ( ! append ) { markerLayer.clearLayers(); }
+			var pts = [];
+			( markers || [] ).forEach( function ( mk ) {
+				if ( typeof mk.lat !== 'number' || typeof mk.lng !== 'number' ) { return; }
+				var mark = window.L.marker( [ mk.lat, mk.lng ] ).addTo( markerLayer );
+				var stars = mk.rating ? ( Number( mk.rating ).toFixed( 1 ) + ' ★' ) : '';
+				mark.bindPopup( '<a href="' + encodeURI( mk.url ) + '" style="font-weight:700">' + escapeHtml( mk.name ) + '</a>' + ( mk.city ? '<br>' + escapeHtml( mk.city ) : '' ) + ( stars ? '<br>' + stars : '' ) );
+				pts.push( [ mk.lat, mk.lng ] );
+			} );
+			if ( pts.length ) {
+				try { m.fitBounds( pts, { padding: [ 40, 40 ], maxZoom: 12 } ); } catch ( e ) {}
+			}
+			setTimeout( function () { m.invalidateSize(); }, 60 );
 		}
 
 		function run( append ) {
@@ -133,27 +172,36 @@
 				if ( emptyEl ) { emptyEl.hidden = res.data.found !== 0; }
 				if ( loadmore ) { loadmore.hidden = paged >= maxPages; }
 				initHours();
+				renderMarkers( res.data.markers || [], append );
 			} );
 		}
 
 		if ( form ) {
 			form.addEventListener( 'submit', function ( e ) { e.preventDefault(); run( false ); } );
 		}
-		[ serviceEl, areaEl, locEl ].forEach( function ( el ) { if ( el ) { el.addEventListener( 'change', function () { run( false ); } ); } } );
-
-		root.querySelectorAll( '[data-service]' ).forEach( function ( tile ) {
-			tile.addEventListener( 'click', function () {
-				root.querySelectorAll( '.dck-tile' ).forEach( function ( t ) { t.classList.remove( 'active' ); } );
-				tile.classList.add( 'active' );
-				if ( serviceEl ) { serviceEl.value = tile.getAttribute( 'data-service' ); }
-				run( false );
-				var rw = root.querySelector( '.dck-results-wrap' );
-				if ( rw ) { rw.scrollIntoView( { behavior: 'smooth', block: 'start' } ); }
-			} );
+		if ( locEl ) { locEl.addEventListener( 'change', function () { run( false ); } ); }
+		root.querySelectorAll( '[data-filter-service], [data-filter-area]' ).forEach( function ( c ) {
+			c.addEventListener( 'change', function () { run( false ); } );
 		} );
-
+		var clearBtn = root.querySelector( '[data-filter-clear]' );
+		if ( clearBtn ) {
+			clearBtn.addEventListener( 'click', function () {
+				root.querySelectorAll( '[data-filter-service]:checked, [data-filter-area]:checked' ).forEach( function ( c ) { c.checked = false; } );
+				run( false );
+			} );
+		}
 		if ( loadmore ) {
 			loadmore.addEventListener( 'click', function () { if ( paged < maxPages ) { paged++; run( true ); } } );
+		}
+		// Mobile map toggle.
+		var mapToggle = root.querySelector( '[data-map-toggle]' );
+		if ( mapToggle && splitview ) {
+			mapToggle.addEventListener( 'click', function () {
+				var on = splitview.classList.toggle( 'dck-show-map' );
+				mapToggle.setAttribute( 'aria-pressed', on ? 'true' : 'false' );
+				mapToggle.textContent = on ? 'List' : 'Map';
+				if ( on && map ) { setTimeout( function () { map.invalidateSize(); }, 60 ); }
+			} );
 		}
 
 		run( false ); // initial load
