@@ -471,8 +471,18 @@ body.single-dck_contractor { overflow-x: hidden; }
 .dck-filters__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .dck-filters__head h3 { margin: 0; font-size: 15px; font-weight: 800; }
 .dck-filter-clear { background: none; border: 0; color: var(--dck-brand); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 0; }
-.dck-filter-group { padding: 12px 0; border-top: 1px solid var(--dck-line); }
-.dck-filter-group h4 { margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--dck-muted); }
+/* Collapsible pop-down filter groups */
+.dck-filter-group { border-top: 1px solid var(--dck-line); }
+.dck-filter-group > summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 12px 2px; font-size: 13px; font-weight: 700; letter-spacing: .03em;
+  text-transform: uppercase; color: var(--dck-ink);
+}
+.dck-filter-group > summary::-webkit-details-marker { display: none; }
+.dck-filter-group > summary::after { content: "+"; color: var(--dck-muted); font-size: 18px; font-weight: 400; line-height: 1; }
+.dck-filter-group[open] > summary::after { content: "\2013"; }
+.dck-filter-group > summary:hover { color: var(--dck-brand); }
+.dck-filter-body { padding: 2px 0 12px; display: grid; gap: 2px; }
 .dck-filter-group .dck-check { display: flex; align-items: center; gap: 8px; font-size: 14px; padding: 3px 0; cursor: pointer; }
 
 .dck-results--list { display: flex; flex-direction: column; gap: 14px; }

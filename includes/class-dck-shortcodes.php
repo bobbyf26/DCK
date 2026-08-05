@@ -86,20 +86,24 @@ class DCK_Shortcodes {
 							<button type="button" class="dck-filter-clear" data-filter-clear><?php esc_html_e( 'Clear', 'dck-directory' ); ?></button>
 						</div>
 						<?php if ( ! empty( $services ) && ! is_wp_error( $services ) ) : ?>
-						<div class="dck-filter-group">
-							<h4><?php echo esc_html( dck_setting( 'systems_heading' ) ); ?></h4>
-							<?php foreach ( $services as $t ) : ?>
-							<label class="dck-check"><input type="checkbox" data-filter-service value="<?php echo esc_attr( $t->slug ); ?>" <?php checked( $sel_service, $t->slug ); ?>> <?php echo esc_html( $t->name ); ?></label>
-							<?php endforeach; ?>
-						</div>
+						<details class="dck-filter-group"<?php echo $sel_service ? ' open' : ''; ?>>
+							<summary><?php echo esc_html( dck_setting( 'systems_heading' ) ); ?></summary>
+							<div class="dck-filter-body">
+								<?php foreach ( $services as $t ) : ?>
+								<label class="dck-check"><input type="checkbox" data-filter-service value="<?php echo esc_attr( $t->slug ); ?>" <?php checked( $sel_service, $t->slug ); ?>> <?php echo esc_html( $t->name ); ?></label>
+								<?php endforeach; ?>
+							</div>
+						</details>
 						<?php endif; ?>
 						<?php if ( ! empty( $areas ) && ! is_wp_error( $areas ) ) : ?>
-						<div class="dck-filter-group">
-							<h4><?php esc_html_e( 'Project type', 'dck-directory' ); ?></h4>
-							<?php foreach ( $areas as $t ) : ?>
-							<label class="dck-check"><input type="checkbox" data-filter-area value="<?php echo esc_attr( $t->slug ); ?>" <?php checked( $sel_area, $t->slug ); ?>> <?php echo esc_html( $t->name ); ?></label>
-							<?php endforeach; ?>
-						</div>
+						<details class="dck-filter-group"<?php echo $sel_area ? ' open' : ''; ?>>
+							<summary><?php esc_html_e( 'Project type', 'dck-directory' ); ?></summary>
+							<div class="dck-filter-body">
+								<?php foreach ( $areas as $t ) : ?>
+								<label class="dck-check"><input type="checkbox" data-filter-area value="<?php echo esc_attr( $t->slug ); ?>" <?php checked( $sel_area, $t->slug ); ?>> <?php echo esc_html( $t->name ); ?></label>
+								<?php endforeach; ?>
+							</div>
+						</details>
 						<?php endif; ?>
 					</aside>
 
