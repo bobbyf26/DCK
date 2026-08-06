@@ -212,10 +212,9 @@
 			} );
 		}
 
-		/* --- "Where" location typeahead --- */
+		/* --- "Where" location typeahead (geocoded suggestions) --- */
 		if ( kwEl && typeahead ) {
-			var locData = [];
-			try { locData = JSON.parse( kwEl.getAttribute( 'data-dck-locations' ) || '[]' ); } catch ( e ) { locData = []; }
+			var taTimer = null, taSeq = 0;
 
 			function closeTA() { typeahead.hidden = true; typeahead.innerHTML = ''; }
 			function setActive( items, idx ) {
@@ -224,13 +223,18 @@
 			}
 			function choose( m ) {
 				kwEl.value = m.label;
-				kwEl.dataset.locSlug = m.slug;
+				if ( m.loc ) {
+					kwEl.dataset.locSlug = m.loc;
+					if ( locEl ) { locEl.value = m.loc; }
+				} else {
+					delete kwEl.dataset.locSlug;
+				}
 				closeTA();
 				run( false );
 			}
 			function openTA( matches ) {
 				typeahead.innerHTML = '';
-				if ( ! matches.length ) { typeahead.hidden = true; return; }
+				if ( ! matches || ! matches.length ) { typeahead.hidden = true; return; }
 				matches.forEach( function ( m ) {
 					var li = document.createElement( 'li' );
 					li.className = 'dck-ta-item';
@@ -245,12 +249,17 @@
 
 			kwEl.addEventListener( 'input', function () {
 				delete kwEl.dataset.locSlug; // typing invalidates a prior pick
-				var q = kwEl.value.trim().toLowerCase();
-				if ( q.length < 2 ) { closeTA(); return; }
-				var matches = locData.filter( function ( m ) {
-					return m.label.toLowerCase().indexOf( q ) !== -1;
-				} ).slice( 0, 8 );
-				openTA( matches );
+				var q = kwEl.value.trim();
+				if ( q.length < 3 ) { closeTA(); return; }
+				clearTimeout( taTimer );
+				taTimer = setTimeout( function () {
+					var seq = ++taSeq;
+					post( 'dck_geo_suggest', { q: q } ).then( function ( res ) {
+						if ( seq !== taSeq ) { return; } // ignore out-of-order responses
+						if ( ! res || ! res.success ) { closeTA(); return; }
+						openTA( res.data.items || [] );
+					} ).catch( function () { closeTA(); } );
+				}, 320 );
 			} );
 			kwEl.addEventListener( 'keydown', function ( e ) {
 				if ( typeahead.hidden ) { return; }
@@ -262,7 +271,7 @@
 				else if ( 'Enter' === e.key ) { var act = typeahead.querySelector( '.dck-ta-item.active' ); if ( act ) { e.preventDefault(); choose( act._m ); } }
 				else if ( 'Escape' === e.key ) { closeTA(); }
 			} );
-			kwEl.addEventListener( 'blur', function () { setTimeout( closeTA, 120 ); } );
+			kwEl.addEventListener( 'blur', function () { setTimeout( closeTA, 150 ); } );
 		}
 
 		run( false ); // initial load

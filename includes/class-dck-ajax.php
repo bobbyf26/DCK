@@ -25,6 +25,82 @@ class DCK_Ajax {
 		add_action( 'wp_ajax_nopriv_dck_search', array( $this, 'search' ) );
 		add_action( 'wp_ajax_dck_lead', array( $this, 'lead' ) );
 		add_action( 'wp_ajax_nopriv_dck_lead', array( $this, 'lead' ) );
+		add_action( 'wp_ajax_dck_geo_suggest', array( $this, 'geo_suggest' ) );
+		add_action( 'wp_ajax_nopriv_dck_geo_suggest', array( $this, 'geo_suggest' ) );
+	}
+
+	/**
+	 * Location typeahead: suggest US places for the "Where" box via OpenStreetMap
+	 * Nominatim. Cached per query. Each item carries lat/lng and, when the place's
+	 * state matches one of our location terms, that state's slug ('loc') so a pick
+	 * filters straight to it.
+	 */
+	public function geo_suggest() {
+		check_ajax_referer( 'dck_dir_nonce', 'nonce', false );
+		$q = isset( $_POST['q'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['q'] ) ) ) : '';
+		if ( strlen( $q ) < 3 ) {
+			wp_send_json_success( array( 'items' => array() ) );
+		}
+		$key    = 'dck_sg_' . md5( strtolower( $q ) );
+		$cached = get_transient( $key );
+		if ( false !== $cached ) {
+			wp_send_json_success( array( 'items' => $cached ) );
+		}
+		$url  = add_query_arg(
+			array( 'q' => rawurlencode( $q ), 'format' => 'json', 'addressdetails' => 1, 'limit' => 6, 'countrycodes' => 'us', 'dedupe' => 1 ),
+			'https://nominatim.openstreetmap.org/search'
+		);
+		$resp = wp_remote_get(
+			$url,
+			array(
+				'timeout' => 8,
+				'headers' => array( 'User-Agent' => 'DCK-Directory/1.8 (' . home_url( '/' ) . '; ' . get_option( 'admin_email' ) . ')' ),
+			)
+		);
+		if ( is_wp_error( $resp ) ) {
+			wp_send_json_success( array( 'items' => array() ) );
+		}
+		$body  = json_decode( wp_remote_retrieve_body( $resp ), true );
+		$items = array();
+		if ( is_array( $body ) ) {
+			// Map state name → our location-term slug (so a pick can filter).
+			$state_slug  = array();
+			$state_terms = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_LOCATION, 'parent' => 0, 'hide_empty' => false ) );
+			if ( ! is_wp_error( $state_terms ) ) {
+				foreach ( $state_terms as $st ) {
+					$state_slug[ strtolower( $st->name ) ] = $st->slug;
+				}
+			}
+			foreach ( $body as $r ) {
+				if ( empty( $r['lat'] ) || empty( $r['lon'] ) ) {
+					continue;
+				}
+				$addr = isset( $r['address'] ) && is_array( $r['address'] ) ? $r['address'] : array();
+				$city = '';
+				foreach ( array( 'city', 'town', 'village', 'hamlet', 'county' ) as $ck ) {
+					if ( ! empty( $addr[ $ck ] ) ) {
+						$city = $addr[ $ck ];
+						break;
+					}
+				}
+				$state_name = ! empty( $addr['state'] ) ? $addr['state'] : '';
+				$label      = trim( ( $city ? $city : ( isset( $r['name'] ) ? $r['name'] : '' ) ) . ( $state_name ? ', ' . $state_name : '' ) );
+				if ( '' === $label ) {
+					$label = isset( $r['display_name'] ) ? $r['display_name'] : $q;
+				}
+				$items[] = array(
+					'label' => $label,
+					'lat'   => (string) $r['lat'],
+					'lng'   => (string) $r['lon'],
+					'loc'   => ( $state_name && isset( $state_slug[ strtolower( $state_name ) ] ) ) ? $state_slug[ strtolower( $state_name ) ] : '',
+				);
+				if ( count( $items ) >= 6 ) {
+					break;
+				}
+			}
+		}
+		set_transient( $key, $items, DAY_IN_SECONDS );
+		wp_send_json_success( array( 'items' => $items ) );
 	}
 
 	/**
