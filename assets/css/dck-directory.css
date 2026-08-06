@@ -542,3 +542,14 @@ body.single-dck_contractor { overflow-x: hidden; }
   background-image: linear-gradient(135deg, #8d8579 0%, #6f6a61 55%, #57534c 100%);
 }
 .dck-system-tile__name { padding: 12px 14px; font-weight: 700; font-size: 15px; color: var(--dck-ink); }
+
+/* ---------- AJAX results pagination buttons ---------- */
+.dck-pagination { flex-wrap: wrap; }
+.dck-page {
+  min-width: 38px; padding: 7px 12px; border: 1px solid var(--dck-line); border-radius: 8px;
+  background: var(--dck-card); color: var(--dck-ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.dck-page:hover:not(:disabled):not(.current) { border-color: var(--dck-brand); color: var(--dck-brand); }
+.dck-page.current { background: var(--dck-brand); color: #fff; border-color: var(--dck-brand); cursor: default; }
+.dck-page:disabled { opacity: .5; cursor: default; }
+.dck-page.dck-page-gap { border: 0; background: none; opacity: .7; cursor: default; min-width: 0; padding: 7px 4px; }

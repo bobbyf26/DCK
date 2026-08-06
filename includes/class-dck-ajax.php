@@ -159,7 +159,7 @@ class DCK_Ajax {
 			);
 		}
 
-		$per  = 12;
+		$per  = 10;
 		$base = array(
 			'post_type'   => DCK_Post_Types::POST_TYPE,
 			'post_status' => 'publish',

@@ -106,7 +106,7 @@
 		var results  = root.querySelector( '[data-results]' );
 		var countEl  = root.querySelector( '[data-results-count]' );
 		var emptyEl  = root.querySelector( '[data-results-empty]' );
-		var loadmore = root.querySelector( '[data-loadmore]' );
+		var pager    = root.querySelector( '[data-pagination]' );
 		var mapEl    = root.querySelector( '[data-dck-map]' );
 		var splitview = root.querySelector( '[data-splitview]' );
 		var typeahead = root.querySelector( '[data-typeahead]' );
@@ -172,38 +172,65 @@
 			setTimeout( function () { m.invalidateSize(); }, 60 );
 		}
 
-		function run( append ) {
-			if ( ! append ) { paged = 1; results.classList.add( 'dck-is-loading' ); }
+		function renderPagination() {
+			if ( ! pager ) { return; }
+			pager.innerHTML = '';
+			if ( maxPages <= 1 ) { return; }
+			function btn( label, target, opts ) {
+				opts = opts || {};
+				var b = document.createElement( 'button' );
+				b.type = 'button';
+				b.className = 'dck-page' + ( opts.current ? ' current' : '' ) + ( opts.gap ? ' dck-page-gap' : '' );
+				b.textContent = label;
+				if ( opts.gap || opts.disabled ) { b.disabled = true; }
+				else { b.addEventListener( 'click', function () { run( target ); } ); }
+				pager.appendChild( b );
+			}
+			btn( '‹', paged - 1, { disabled: paged <= 1 } );
+			// Windowed page numbers: 1 … (p-1) p (p+1) … N
+			var win = [];
+			for ( var i = 1; i <= maxPages; i++ ) {
+				if ( i === 1 || i === maxPages || ( i >= paged - 1 && i <= paged + 1 ) ) { win.push( i ); }
+			}
+			var last = 0;
+			win.forEach( function ( n ) {
+				if ( n - last > 1 ) { btn( '…', 0, { gap: true } ); }
+				btn( String( n ), n, { current: n === paged } );
+				last = n;
+			} );
+			btn( '›', paged + 1, { disabled: paged >= maxPages } );
+		}
+
+		function run( page ) {
+			paged = Math.max( 1, page || 1 );
+			results.classList.add( 'dck-is-loading' );
 			post( 'dck_search', params( paged ) ).then( function ( res ) {
 				results.classList.remove( 'dck-is-loading' );
 				if ( ! res || ! res.success ) { return; }
-				if ( append ) { results.insertAdjacentHTML( 'beforeend', res.data.html ); }
-				else { results.innerHTML = res.data.html; }
+				results.innerHTML = res.data.html;
 				maxPages = res.data.pages;
+				paged = res.data.paged || paged;
 				if ( countEl ) { countEl.textContent = res.data.found + ( res.data.found === 1 ? ' contractor' : ' contractors' ); }
 				if ( emptyEl ) { emptyEl.hidden = res.data.found !== 0; }
-				if ( loadmore ) { loadmore.hidden = paged >= maxPages; }
+				renderPagination();
 				initHours();
-				renderMarkers( res.data.markers || [], append, res.data.center );
+				renderMarkers( res.data.markers || [], false, res.data.center );
 			} );
 		}
 
 		if ( form ) {
-			form.addEventListener( 'submit', function ( e ) { e.preventDefault(); run( false ); } );
+			form.addEventListener( 'submit', function ( e ) { e.preventDefault(); run( 1 ); } );
 		}
-		if ( locEl ) { locEl.addEventListener( 'change', function () { run( false ); } ); }
+		if ( locEl ) { locEl.addEventListener( 'change', function () { run( 1 ); } ); }
 		root.querySelectorAll( '[data-filter-service], [data-filter-area]' ).forEach( function ( c ) {
-			c.addEventListener( 'change', function () { run( false ); } );
+			c.addEventListener( 'change', function () { run( 1 ); } );
 		} );
 		var clearBtn = root.querySelector( '[data-filter-clear]' );
 		if ( clearBtn ) {
 			clearBtn.addEventListener( 'click', function () {
 				root.querySelectorAll( '[data-filter-service]:checked, [data-filter-area]:checked' ).forEach( function ( c ) { c.checked = false; } );
-				run( false );
+				run( 1 );
 			} );
-		}
-		if ( loadmore ) {
-			loadmore.addEventListener( 'click', function () { if ( paged < maxPages ) { paged++; run( true ); } } );
 		}
 		// "Browse by system" tiles → check that coating-system filter and search.
 		root.querySelectorAll( '[data-service]' ).forEach( function ( tile ) {
@@ -215,7 +242,7 @@
 					var grp = box.closest( '.dck-filter-group' );
 					if ( grp ) { grp.open = true; }
 				}
-				run( false );
+				run( 1 );
 				var rh = root.querySelector( '.dck-results-head' );
 				if ( rh ) { rh.scrollIntoView( { behavior: 'smooth', block: 'start' } ); }
 			} );
@@ -248,7 +275,7 @@
 				kwEl.dataset.nearLng = m.lng;
 				if ( locEl ) { locEl.value = ''; } // don't also constrain by state
 				closeTA();
-				run( false );
+				run( 1 );
 			}
 			function openTA( matches ) {
 				typeahead.innerHTML = '';
@@ -293,7 +320,7 @@
 			kwEl.addEventListener( 'blur', function () { setTimeout( closeTA, 150 ); } );
 		}
 
-		run( false ); // initial load
+		run( 1 ); // initial load
 	}
 
 	/* ---------------- Profile tabs ---------------- */

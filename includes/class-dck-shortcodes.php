@@ -111,7 +111,7 @@ class DCK_Shortcodes {
 					<div class="dck-results-col">
 						<div class="dck-results dck-results--list" data-results aria-live="polite"></div>
 						<div class="dck-results-empty" data-results-empty hidden><?php esc_html_e( 'No contractors match your search yet. Try widening your filters.', 'dck-directory' ); ?></div>
-						<div class="dck-loadmore-wrap"><button type="button" class="dck-btn dck-btn--ghost" data-loadmore hidden><?php esc_html_e( 'Load more', 'dck-directory' ); ?></button></div>
+						<nav class="dck-pagination" data-pagination aria-label="<?php esc_attr_e( 'Results pages', 'dck-directory' ); ?>"></nav>
 					</div>
 
 					<div class="dck-map-col" data-map-col>
