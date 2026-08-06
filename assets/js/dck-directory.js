@@ -109,6 +109,7 @@
 		var loadmore = root.querySelector( '[data-loadmore]' );
 		var mapEl    = root.querySelector( '[data-dck-map]' );
 		var splitview = root.querySelector( '[data-splitview]' );
+		var typeahead = root.querySelector( '[data-typeahead]' );
 		var paged = 1, maxPages = 1;
 
 		function escapeHtml( s ) {
@@ -121,7 +122,14 @@
 		}
 
 		function params( p ) {
-			var d = { location: locEl ? locEl.value : '', keyword: kwEl ? kwEl.value : '', paged: p };
+			// A picked location suggestion filters by term slug; otherwise the
+			// Where box is a free-text keyword. The State select is the fallback.
+			var pick = ( kwEl && kwEl.dataset.locSlug ) ? kwEl.dataset.locSlug : '';
+			var d = {
+				location: pick || ( locEl ? locEl.value : '' ),
+				keyword: pick ? '' : ( kwEl ? kwEl.value : '' ),
+				paged: p
+			};
 			checkedValues( '[data-filter-service]' ).forEach( function ( v, i ) { d[ 'services[' + i + ']' ] = v; } );
 			checkedValues( '[data-filter-area]' ).forEach( function ( v, i ) { d[ 'areas[' + i + ']' ] = v; } );
 			return d;
@@ -202,6 +210,59 @@
 				mapToggle.textContent = on ? 'List' : 'Map';
 				if ( on && map ) { setTimeout( function () { map.invalidateSize(); }, 60 ); }
 			} );
+		}
+
+		/* --- "Where" location typeahead --- */
+		if ( kwEl && typeahead ) {
+			var locData = [];
+			try { locData = JSON.parse( kwEl.getAttribute( 'data-dck-locations' ) || '[]' ); } catch ( e ) { locData = []; }
+
+			function closeTA() { typeahead.hidden = true; typeahead.innerHTML = ''; }
+			function setActive( items, idx ) {
+				items.forEach( function ( it, i ) { it.classList.toggle( 'active', i === idx ); } );
+				if ( items[ idx ] ) { items[ idx ].scrollIntoView( { block: 'nearest' } ); }
+			}
+			function choose( m ) {
+				kwEl.value = m.label;
+				kwEl.dataset.locSlug = m.slug;
+				closeTA();
+				run( false );
+			}
+			function openTA( matches ) {
+				typeahead.innerHTML = '';
+				if ( ! matches.length ) { typeahead.hidden = true; return; }
+				matches.forEach( function ( m ) {
+					var li = document.createElement( 'li' );
+					li.className = 'dck-ta-item';
+					li.setAttribute( 'role', 'option' );
+					li.textContent = m.label;
+					li._m = m;
+					li.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); choose( m ); } );
+					typeahead.appendChild( li );
+				} );
+				typeahead.hidden = false;
+			}
+
+			kwEl.addEventListener( 'input', function () {
+				delete kwEl.dataset.locSlug; // typing invalidates a prior pick
+				var q = kwEl.value.trim().toLowerCase();
+				if ( q.length < 2 ) { closeTA(); return; }
+				var matches = locData.filter( function ( m ) {
+					return m.label.toLowerCase().indexOf( q ) !== -1;
+				} ).slice( 0, 8 );
+				openTA( matches );
+			} );
+			kwEl.addEventListener( 'keydown', function ( e ) {
+				if ( typeahead.hidden ) { return; }
+				var items = Array.prototype.slice.call( typeahead.querySelectorAll( '.dck-ta-item' ) );
+				if ( ! items.length ) { return; }
+				var idx = items.indexOf( typeahead.querySelector( '.dck-ta-item.active' ) );
+				if ( 'ArrowDown' === e.key ) { e.preventDefault(); setActive( items, Math.min( items.length - 1, idx + 1 ) ); }
+				else if ( 'ArrowUp' === e.key ) { e.preventDefault(); setActive( items, Math.max( 0, idx - 1 ) ); }
+				else if ( 'Enter' === e.key ) { var act = typeahead.querySelector( '.dck-ta-item.active' ); if ( act ) { e.preventDefault(); choose( act._m ); } }
+				else if ( 'Escape' === e.key ) { closeTA(); }
+			} );
+			kwEl.addEventListener( 'blur', function () { setTimeout( closeTA, 120 ); } );
 		}
 
 		run( false ); // initial load

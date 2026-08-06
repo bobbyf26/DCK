@@ -43,6 +43,22 @@ class DCK_Shortcodes {
 		$areas    = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_AREA, 'hide_empty' => false ) );
 		$states   = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_LOCATION, 'parent' => 0, 'hide_empty' => true ) );
 
+		// Location suggestions for the "Where" typeahead — every location term
+		// that has contractors, cities labeled "City, State". Matched client-side.
+		$loc_terms   = get_terms( array( 'taxonomy' => DCK_Post_Types::TAX_LOCATION, 'hide_empty' => true ) );
+		$locations   = array();
+		if ( ! is_wp_error( $loc_terms ) && $loc_terms ) {
+			$state_by_id = array();
+			foreach ( $loc_terms as $t ) {
+				$state_by_id[ $t->term_id ] = $t->name;
+			}
+			foreach ( $loc_terms as $t ) {
+				$label = ( $t->parent && isset( $state_by_id[ $t->parent ] ) ) ? $t->name . ', ' . $state_by_id[ $t->parent ] : $t->name;
+				$locations[] = array( 'label' => $label, 'slug' => $t->slug );
+			}
+			usort( $locations, function( $a, $b ) { return strcmp( $a['label'], $b['label'] ); } );
+		}
+
 		// Pre-selected from query string (e.g. links from a category page).
 		$sel_service  = isset( $_GET['service'] ) ? sanitize_title( wp_unslash( $_GET['service'] ) ) : '';
 		$sel_area     = isset( $_GET['area'] ) ? sanitize_title( wp_unslash( $_GET['area'] ) ) : '';
@@ -56,9 +72,10 @@ class DCK_Shortcodes {
 					<h1><?php echo esc_html( dck_setting( 'hero_title' ) ); ?></h1>
 					<p><?php echo esc_html( dck_setting( 'hero_subtitle' ) ); ?></p>
 					<form class="dck-searchbar dck-searchbar--location" data-dck-search>
-						<div class="dck-field dck-field--grow">
+						<div class="dck-field dck-field--grow dck-typeahead-wrap">
 							<label><?php esc_html_e( 'Where', 'dck-directory' ); ?></label>
-							<input type="text" name="keyword" data-search-keyword placeholder="<?php esc_attr_e( 'City or ZIP…', 'dck-directory' ); ?>">
+							<input type="text" name="keyword" data-search-keyword autocomplete="off" placeholder="<?php esc_attr_e( 'City or ZIP…', 'dck-directory' ); ?>" data-dck-locations="<?php echo esc_attr( wp_json_encode( $locations ) ); ?>">
+							<ul class="dck-typeahead" data-typeahead role="listbox" hidden></ul>
 						</div>
 						<div class="dck-field">
 							<label><?php esc_html_e( 'State', 'dck-directory' ); ?></label>
