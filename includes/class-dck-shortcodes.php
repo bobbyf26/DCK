@@ -134,16 +134,6 @@ class DCK_Shortcodes {
 				</section>
 				<?php endif; ?>
 
-				<?php if ( ! empty( $states ) && ! is_wp_error( $states ) ) : ?>
-				<section class="dck-states">
-					<h2><?php echo esc_html( dck_setting( 'states_heading' ) ); ?></h2>
-					<div class="dck-states__grid">
-						<?php foreach ( $states as $t ) : ?>
-							<a href="<?php echo esc_url( get_term_link( $t ) ); ?>"><?php echo esc_html( $t->name ); ?> <span>(<?php echo (int) $t->count; ?>)</span></a>
-						<?php endforeach; ?>
-					</div>
-				</section>
-				<?php endif; ?>
 
 				<div class="dck-cta-strip">
 					<div>

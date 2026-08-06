@@ -528,7 +528,9 @@ body.single-dck_contractor { overflow-x: hidden; }
 /* ---------- "Browse by system" tiles (below the contractors) ---------- */
 .dck-systems { margin: 34px 0; }
 .dck-systems h2 { font-size: 18px; font-weight: 700; margin: 0 0 14px; }
-.dck-systems__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.dck-systems__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+@media (max-width: 720px) { .dck-systems__grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 460px) { .dck-systems__grid { grid-template-columns: 1fr; } }
 .dck-system-tile {
   cursor: pointer; padding: 0; text-align: left; border: 1px solid var(--dck-line);
   background: var(--dck-card); border-radius: 12px; overflow: hidden;
