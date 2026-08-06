@@ -179,6 +179,21 @@ class DCK_Fields {
 		register_post_meta( DCK_Post_Types::POST_TYPE, '_dck_tier', array( 'single' => true, 'type' => 'string', 'show_in_rest' => true, 'auth_callback' => $admin_auth ) );
 		register_post_meta( DCK_Post_Types::POST_TYPE, '_dck_featured', array( 'single' => true, 'type' => 'string', 'show_in_rest' => true, 'auth_callback' => $admin_auth ) );
 		register_post_meta( DCK_Post_Types::POST_TYPE, '_dck_rating_avg', array( 'single' => true, 'type' => 'string', 'show_in_rest' => true, 'auth_callback' => $admin_auth ) );
+
+		// Photo for each coating system (attachment ID) — shown on the homepage
+		// "Browse by system" tiles. Editable on the term screen + over REST.
+		register_term_meta(
+			DCK_Post_Types::TAX_SERVICE,
+			'_dck_term_image',
+			array(
+				'single'        => true,
+				'type'          => 'integer',
+				'show_in_rest'  => true,
+				'auth_callback' => function() {
+					return current_user_can( 'manage_categories' );
+				},
+			)
+		);
 	}
 
 	/* ---------------------------------------------------------------------

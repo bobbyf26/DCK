@@ -2,6 +2,34 @@
 (function () {
 	'use strict';
 
+	/* ---- Coating-system term photo picker ---- */
+	document.querySelectorAll( '[data-dck-termimg]' ).forEach( function ( wrap ) {
+		var input   = wrap.querySelector( '[data-termimg-input]' );
+		var preview = wrap.querySelector( '[data-termimg-preview]' );
+		var addBtn  = wrap.querySelector( '[data-termimg-add]' );
+		var clearBtn = wrap.querySelector( '[data-termimg-clear]' );
+		if ( addBtn && window.wp && window.wp.media ) {
+			addBtn.addEventListener( 'click', function ( e ) {
+				e.preventDefault();
+				var frame = window.wp.media( { title: 'Select photo', multiple: false, library: { type: 'image' } } );
+				frame.on( 'select', function () {
+					var a = frame.state().get( 'selection' ).first().toJSON();
+					input.value = a.id;
+					var url = ( a.sizes && a.sizes.thumbnail ) ? a.sizes.thumbnail.url : a.url;
+					preview.innerHTML = '<img src="' + url + '" style="max-width:120px;height:auto;border-radius:8px">';
+				} );
+				frame.open();
+			} );
+		}
+		if ( clearBtn ) {
+			clearBtn.addEventListener( 'click', function ( e ) {
+				e.preventDefault();
+				input.value = '';
+				preview.innerHTML = '';
+			} );
+		}
+	} );
+
 	/* ---- Gallery via WP media frame ---- */
 	document.querySelectorAll( '[data-dck-gallery]' ).forEach( function ( wrap ) {
 		var input   = wrap.querySelector( '[data-gallery-input]' );

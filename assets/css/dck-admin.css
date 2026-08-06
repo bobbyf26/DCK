@@ -21,3 +21,6 @@
 .dck-repeater-item input, .dck-repeater-item textarea, .dck-repeater-item select { width: 100%; }
 .dck-repeater-item .dck-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .dck-remove-row { color: #b32d2e !important; justify-self: start; }
+
+.dck-termimg-preview { margin: 8px 0; }
+.dck-termimg-preview img { display: block; }

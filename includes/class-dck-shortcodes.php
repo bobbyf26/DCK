@@ -119,6 +119,21 @@ class DCK_Shortcodes {
 					</div>
 				</div>
 
+				<?php if ( ! empty( $services ) && ! is_wp_error( $services ) ) : ?>
+				<section class="dck-systems">
+					<h2><?php echo esc_html( dck_setting( 'systems_heading' ) ); ?></h2>
+					<div class="dck-systems__grid">
+						<?php foreach ( $services as $t ) :
+							$img = dck_term_image_url( $t->term_id, 'medium' ); ?>
+							<button type="button" class="dck-system-tile" data-service="<?php echo esc_attr( $t->slug ); ?>">
+								<span class="dck-system-tile__img"<?php echo $img ? ' style="background-image:url(' . esc_url( $img ) . ')"' : ''; ?>></span>
+								<span class="dck-system-tile__name"><?php echo esc_html( $t->name ); ?></span>
+							</button>
+						<?php endforeach; ?>
+					</div>
+				</section>
+				<?php endif; ?>
+
 				<?php if ( ! empty( $states ) && ! is_wp_error( $states ) ) : ?>
 				<section class="dck-states">
 					<h2><?php echo esc_html( dck_setting( 'states_heading' ) ); ?></h2>

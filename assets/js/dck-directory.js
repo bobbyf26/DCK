@@ -205,6 +205,21 @@
 		if ( loadmore ) {
 			loadmore.addEventListener( 'click', function () { if ( paged < maxPages ) { paged++; run( true ); } } );
 		}
+		// "Browse by system" tiles → check that coating-system filter and search.
+		root.querySelectorAll( '[data-service]' ).forEach( function ( tile ) {
+			tile.addEventListener( 'click', function () {
+				var slug = tile.getAttribute( 'data-service' );
+				var box = root.querySelector( '[data-filter-service][value="' + slug + '"]' );
+				if ( box ) {
+					box.checked = true;
+					var grp = box.closest( '.dck-filter-group' );
+					if ( grp ) { grp.open = true; }
+				}
+				run( false );
+				var rh = root.querySelector( '.dck-results-head' );
+				if ( rh ) { rh.scrollIntoView( { behavior: 'smooth', block: 'start' } ); }
+			} );
+		} );
 		// Mobile map toggle.
 		var mapToggle = root.querySelector( '[data-map-toggle]' );
 		if ( mapToggle && splitview ) {

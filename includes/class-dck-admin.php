@@ -33,6 +33,59 @@ class DCK_Admin {
 		// Leads list: show contact details as columns.
 		add_filter( 'manage_dck_lead_posts_columns', array( $this, 'lead_columns' ) );
 		add_action( 'manage_dck_lead_posts_custom_column', array( $this, 'lead_column_content' ), 10, 2 );
+
+		// Coating-system term photo field (used by the homepage tiles).
+		$svc = DCK_Post_Types::TAX_SERVICE;
+		add_action( "{$svc}_add_form_fields", array( $this, 'term_image_add_field' ) );
+		add_action( "{$svc}_edit_form_fields", array( $this, 'term_image_edit_field' ), 10, 1 );
+		add_action( "created_{$svc}", array( $this, 'save_term_image' ) );
+		add_action( "edited_{$svc}", array( $this, 'save_term_image' ) );
+	}
+
+	/* ---------------- Coating-system term photo ---------------- */
+
+	public function term_image_add_field() {
+		?>
+		<div class="form-field dck-term-image" data-dck-termimg>
+			<label><?php esc_html_e( 'System photo', 'dck-directory' ); ?></label>
+			<input type="hidden" name="dck_term_image" value="" data-termimg-input>
+			<div class="dck-termimg-preview" data-termimg-preview></div>
+			<button type="button" class="button" data-termimg-add><?php esc_html_e( 'Choose photo', 'dck-directory' ); ?></button>
+			<button type="button" class="button-link" data-termimg-clear><?php esc_html_e( 'Remove', 'dck-directory' ); ?></button>
+			<p class="description"><?php esc_html_e( 'Shown on the homepage "Browse by system" tiles.', 'dck-directory' ); ?></p>
+		</div>
+		<?php
+	}
+
+	public function term_image_edit_field( $term ) {
+		$img_id = (int) get_term_meta( $term->term_id, '_dck_term_image', true );
+		$src    = $img_id ? wp_get_attachment_image_url( $img_id, 'thumbnail' ) : '';
+		?>
+		<tr class="form-field dck-term-image" data-dck-termimg>
+			<th scope="row"><label><?php esc_html_e( 'System photo', 'dck-directory' ); ?></label></th>
+			<td>
+				<input type="hidden" name="dck_term_image" value="<?php echo esc_attr( $img_id ); ?>" data-termimg-input>
+				<div class="dck-termimg-preview" data-termimg-preview><?php if ( $src ) : ?><img src="<?php echo esc_url( $src ); ?>" style="max-width:120px;height:auto;border-radius:8px"><?php endif; ?></div>
+				<button type="button" class="button" data-termimg-add><?php esc_html_e( 'Choose photo', 'dck-directory' ); ?></button>
+				<button type="button" class="button-link" data-termimg-clear><?php esc_html_e( 'Remove', 'dck-directory' ); ?></button>
+				<p class="description"><?php esc_html_e( 'Shown on the homepage "Browse by system" tiles.', 'dck-directory' ); ?></p>
+			</td>
+		</tr>
+		<?php
+	}
+
+	public function save_term_image( $term_id ) {
+		if ( ! current_user_can( 'manage_categories' ) ) {
+			return;
+		}
+		if ( isset( $_POST['dck_term_image'] ) ) {
+			$id = absint( wp_unslash( $_POST['dck_term_image'] ) );
+			if ( $id ) {
+				update_term_meta( $term_id, '_dck_term_image', $id );
+			} else {
+				delete_term_meta( $term_id, '_dck_term_image' );
+			}
+		}
 	}
 
 	public function lead_columns( $cols ) {
@@ -68,8 +121,10 @@ class DCK_Admin {
 	}
 
 	public function assets( $hook ) {
-		global $post_type;
-		if ( DCK_Post_Types::POST_TYPE !== $post_type ) {
+		$screen  = get_current_screen();
+		$is_cpt  = $screen && DCK_Post_Types::POST_TYPE === $screen->post_type;
+		$is_term = $screen && DCK_Post_Types::TAX_SERVICE === $screen->taxonomy;
+		if ( ! $is_cpt && ! $is_term ) {
 			return;
 		}
 		wp_enqueue_media();

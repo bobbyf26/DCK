@@ -524,3 +524,19 @@ body.single-dck_contractor { overflow-x: hidden; }
 }
 .dck-ta-item { padding: 9px 11px; border-radius: 7px; cursor: pointer; font-size: 14px; color: var(--dck-ink); }
 .dck-ta-item:hover, .dck-ta-item.active { background: var(--dck-brand-soft); color: var(--dck-brand); }
+
+/* ---------- "Browse by system" tiles (below the contractors) ---------- */
+.dck-systems { margin: 34px 0; }
+.dck-systems h2 { font-size: 18px; font-weight: 700; margin: 0 0 14px; }
+.dck-systems__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.dck-system-tile {
+  cursor: pointer; padding: 0; text-align: left; border: 1px solid var(--dck-line);
+  background: var(--dck-card); border-radius: 12px; overflow: hidden;
+  display: flex; flex-direction: column; transition: border-color .15s, transform .15s, box-shadow .15s;
+}
+.dck-system-tile:hover { border-color: var(--dck-brand); transform: translateY(-2px); box-shadow: var(--dck-shadow); }
+.dck-system-tile__img {
+  display: block; height: 130px; background-size: cover; background-position: center;
+  background-image: linear-gradient(135deg, #8d8579 0%, #6f6a61 55%, #57534c 100%);
+}
+.dck-system-tile__name { padding: 12px 14px; font-weight: 700; font-size: 15px; color: var(--dck-ink); }

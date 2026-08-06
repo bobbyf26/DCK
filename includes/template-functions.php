@@ -39,6 +39,18 @@ function dck_adjust_hex( $hex, $percent ) {
 }
 
 /**
+ * Photo URL for a coating-system term (from _dck_term_image), or '' if none.
+ */
+function dck_term_image_url( $term_id, $size = 'medium' ) {
+	$att = (int) get_term_meta( $term_id, '_dck_term_image', true );
+	if ( ! $att ) {
+		return '';
+	}
+	$url = wp_get_attachment_image_url( $att, $size );
+	return $url ? $url : '';
+}
+
+/**
  * Great-circle distance in miles between two lat/lng points (haversine).
  */
 function dck_distance_mi( $lat1, $lng1, $lat2, $lng2 ) {
