@@ -39,6 +39,17 @@ function dck_adjust_hex( $hex, $percent ) {
 }
 
 /**
+ * Great-circle distance in miles between two lat/lng points (haversine).
+ */
+function dck_distance_mi( $lat1, $lng1, $lat2, $lng2 ) {
+	$radius = 3958.8;
+	$dlat   = deg2rad( $lat2 - $lat1 );
+	$dlng   = deg2rad( $lng2 - $lng1 );
+	$a      = sin( $dlat / 2 ) ** 2 + cos( deg2rad( $lat1 ) ) * cos( deg2rad( $lat2 ) ) * sin( $dlng / 2 ) ** 2;
+	return $radius * 2 * asin( min( 1, sqrt( $a ) ) );
+}
+
+/**
  * Geocode a free-text address to [lat, lng] via OpenStreetMap Nominatim.
  * Results (and misses) are cached in transients so we never hammer the API.
  * Returns array( 'lat' => string, 'lng' => string ) or null.

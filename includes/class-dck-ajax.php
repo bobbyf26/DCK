@@ -127,6 +127,10 @@ class DCK_Ajax {
 		$keyword  = isset( $_POST['keyword'] ) ? sanitize_text_field( wp_unslash( $_POST['keyword'] ) ) : '';
 		$paged    = isset( $_POST['paged'] ) ? max( 1, absint( $_POST['paged'] ) ) : 1;
 
+		$near_lat  = ( isset( $_POST['near_lat'] ) && '' !== $_POST['near_lat'] ) ? (float) $_POST['near_lat'] : null;
+		$near_lng  = ( isset( $_POST['near_lng'] ) && '' !== $_POST['near_lng'] ) ? (float) $_POST['near_lng'] : null;
+		$proximity = ( null !== $near_lat && null !== $near_lng && abs( $near_lat ) <= 90 && abs( $near_lng ) <= 180 );
+
 		$tax_query = array( 'relation' => 'AND' );
 		if ( $services ) {
 			$tax_query[] = array(
@@ -144,7 +148,9 @@ class DCK_Ajax {
 				'operator' => 'IN',
 			);
 		}
-		if ( $location ) {
+		// In proximity mode we do NOT constrain by the location term — the whole
+		// point is to show the nearest contractors even if none are in that place.
+		if ( $location && ! $proximity ) {
 			$tax_query[] = array(
 				'taxonomy'         => DCK_Post_Types::TAX_LOCATION,
 				'field'            => 'slug',
@@ -153,63 +159,73 @@ class DCK_Ajax {
 			);
 		}
 
-		$args = array(
-			'post_type'      => DCK_Post_Types::POST_TYPE,
-			'post_status'    => 'publish',
-			'posts_per_page' => 12,
-			'paged'          => $paged,
-			's'              => $keyword,
-			// Default ranking: featured first, then premium tier, then average
-			// review rating, then newest. Named meta_query clauses drive the
-			// ordering. Every published listing is guaranteed to have these three
-			// meta rows (DCK_Fields::ensure_defaults on save + a one-time
-			// backfill), so requiring EXISTS here never drops a listing.
-			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery
-				'relation'        => 'AND',
-				'featured_clause' => array( 'key' => '_dck_featured', 'compare' => 'EXISTS' ),
-				'tier_clause'     => array( 'key' => '_dck_tier', 'compare' => 'EXISTS' ),
-				// DECIMAL(10,2), not bare DECIMAL — WP casts bare DECIMAL as
-				// DECIMAL(10,0), truncating 4.67/4.75 to 4 and killing the tiebreak.
-				'rating_clause'   => array( 'key' => '_dck_rating_avg', 'type' => 'DECIMAL(10,2)', 'compare' => 'EXISTS' ),
-			),
-			'orderby'        => array(
-				'featured_clause' => 'DESC',
-				'tier_clause'     => 'DESC',
-				'rating_clause'   => 'DESC',
-				'date'            => 'DESC',
-			),
+		$per  = 12;
+		$base = array(
+			'post_type'   => DCK_Post_Types::POST_TYPE,
+			'post_status' => 'publish',
+			's'           => $proximity ? '' : $keyword,
 		);
 		if ( count( $tax_query ) > 1 ) {
-			$args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery
+			$base['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery
 		}
 
-		$q       = new WP_Query( $args );
-		$html    = '';
-		$markers = array();
-		if ( $q->have_posts() ) {
-			while ( $q->have_posts() ) {
-				$q->the_post();
-				$id    = get_the_ID();
-				$html .= dck_render_card( $id );
-
+		// --- Proximity mode: rank every match by distance, nearest first, so a
+		// searched area always returns the closest contractors (paged in PHP). ---
+		if ( $proximity ) {
+			$ids = get_posts( array_merge( $base, array( 'posts_per_page' => 300, 'fields' => 'ids', 'orderby' => 'date', 'order' => 'DESC' ) ) );
+			$with = array();
+			$without = array();
+			foreach ( $ids as $id ) {
 				$lat = get_post_meta( $id, '_dck_lat', true );
 				$lng = get_post_meta( $id, '_dck_lng', true );
 				if ( '' !== (string) $lat && '' !== (string) $lng ) {
-					$markers[] = array(
-						'id'     => $id,
-						'lat'    => (float) $lat,
-						'lng'    => (float) $lng,
-						'name'   => get_the_title( $id ),
-						'url'    => get_permalink( $id ),
-						'rating' => (float) get_post_meta( $id, '_dck_rating_avg', true ),
-						'city'   => trim( get_post_meta( $id, '_dck_city', true ) . ', ' . get_post_meta( $id, '_dck_state', true ), ', ' ),
-						'premium' => DCK_Fields::is_premium( $id ) ? 1 : 0,
-					);
+					$with[] = array( 'id' => $id, 'd' => dck_distance_mi( $near_lat, $near_lng, (float) $lat, (float) $lng ) );
+				} else {
+					$without[] = $id;
 				}
 			}
-			wp_reset_postdata();
+			usort( $with, function ( $a, $b ) { return $a['d'] <=> $b['d']; } );
+			$ordered = array_map( function ( $x ) { return $x['id']; }, $with );
+			$ordered = array_merge( $ordered, $without ); // listings without coords go last
+			$total   = count( $ordered );
+			$pages   = (int) max( 1, ceil( $total / $per ) );
+			$slice   = array_slice( $ordered, ( $paged - 1 ) * $per, $per );
+			list( $html, $markers ) = $this->cards_and_markers( $slice );
+			wp_send_json_success(
+				array(
+					'html'    => $html,
+					'found'   => $total,
+					'pages'   => $pages,
+					'paged'   => $paged,
+					'markers' => $markers,
+					'center'  => array( 'lat' => $near_lat, 'lng' => $near_lng ),
+				)
+			);
 		}
 
+		// --- Default ranked mode: featured → premium → rating → newest. ---
+		$args = array_merge(
+			$base,
+			array(
+				'posts_per_page' => $per,
+				'paged'          => $paged,
+				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery
+					'relation'        => 'AND',
+					'featured_clause' => array( 'key' => '_dck_featured', 'compare' => 'EXISTS' ),
+					'tier_clause'     => array( 'key' => '_dck_tier', 'compare' => 'EXISTS' ),
+					'rating_clause'   => array( 'key' => '_dck_rating_avg', 'type' => 'DECIMAL(10,2)', 'compare' => 'EXISTS' ),
+				),
+				'orderby'        => array(
+					'featured_clause' => 'DESC',
+					'tier_clause'     => 'DESC',
+					'rating_clause'   => 'DESC',
+					'date'            => 'DESC',
+				),
+			)
+		);
+
+		$q = new WP_Query( $args );
+		list( $html, $markers ) = $this->cards_and_markers( wp_list_pluck( $q->posts, 'ID' ) );
 		wp_send_json_success(
 			array(
 				'html'    => $html,
@@ -219,6 +235,34 @@ class DCK_Ajax {
 				'markers' => $markers,
 			)
 		);
+	}
+
+	/**
+	 * Build result-card HTML + map markers for a list of listing IDs.
+	 *
+	 * @return array [ html, markers ]
+	 */
+	private function cards_and_markers( $ids ) {
+		$html    = '';
+		$markers = array();
+		foreach ( (array) $ids as $id ) {
+			$html .= dck_render_card( $id );
+			$lat = get_post_meta( $id, '_dck_lat', true );
+			$lng = get_post_meta( $id, '_dck_lng', true );
+			if ( '' !== (string) $lat && '' !== (string) $lng ) {
+				$markers[] = array(
+					'id'      => $id,
+					'lat'     => (float) $lat,
+					'lng'     => (float) $lng,
+					'name'    => get_the_title( $id ),
+					'url'     => get_permalink( $id ),
+					'rating'  => (float) get_post_meta( $id, '_dck_rating_avg', true ),
+					'city'    => trim( get_post_meta( $id, '_dck_city', true ) . ', ' . get_post_meta( $id, '_dck_state', true ), ', ' ),
+					'premium' => DCK_Fields::is_premium( $id ) ? 1 : 0,
+				);
+			}
+		}
+		return array( $html, $markers );
 	}
 
 	/**

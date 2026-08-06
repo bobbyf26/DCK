@@ -122,14 +122,16 @@
 		}
 
 		function params( p ) {
-			// A picked location suggestion filters by term slug; otherwise the
-			// Where box is a free-text keyword. The State select is the fallback.
-			var pick = ( kwEl && kwEl.dataset.locSlug ) ? kwEl.dataset.locSlug : '';
-			var d = {
-				location: pick || ( locEl ? locEl.value : '' ),
-				keyword: pick ? '' : ( kwEl ? kwEl.value : '' ),
-				paged: p
-			};
+			var d = { paged: p };
+			// A picked location suggestion searches by proximity (nearest first);
+			// otherwise the Where box is free-text keyword + the State select.
+			if ( kwEl && kwEl.dataset.nearLat && kwEl.dataset.nearLng ) {
+				d.near_lat = kwEl.dataset.nearLat;
+				d.near_lng = kwEl.dataset.nearLng;
+			} else {
+				d.location = locEl ? locEl.value : '';
+				d.keyword = kwEl ? kwEl.value : '';
+			}
 			checkedValues( '[data-filter-service]' ).forEach( function ( v, i ) { d[ 'services[' + i + ']' ] = v; } );
 			checkedValues( '[data-filter-area]' ).forEach( function ( v, i ) { d[ 'areas[' + i + ']' ] = v; } );
 			return d;
@@ -145,12 +147,12 @@
 			markerLayer = window.L.layerGroup().addTo( map );
 			return map;
 		}
-		function renderMarkers( markers, append ) {
+		function renderMarkers( markers, append, center ) {
 			var m = ensureMap();
 			if ( ! m ) {
 				// Leaflet not ready yet — retry briefly.
-				pending = markers;
-				if ( waited < 20 ) { waited++; setTimeout( function () { renderMarkers( pending, false ); }, 250 ); }
+				pending = { markers: markers, center: center };
+				if ( waited < 20 ) { waited++; setTimeout( function () { renderMarkers( pending.markers, false, pending.center ); }, 250 ); }
 				return;
 			}
 			if ( ! append ) { markerLayer.clearLayers(); }
@@ -162,6 +164,8 @@
 				mark.bindPopup( '<a href="' + encodeURI( mk.url ) + '" style="font-weight:700">' + escapeHtml( mk.name ) + '</a>' + ( mk.city ? '<br>' + escapeHtml( mk.city ) : '' ) + ( stars ? '<br>' + stars : '' ) );
 				pts.push( [ mk.lat, mk.lng ] );
 			} );
+			// Include the searched point so the map frames it alongside the nearest results.
+			if ( center && typeof center.lat !== 'undefined' ) { pts.push( [ Number( center.lat ), Number( center.lng ) ] ); }
 			if ( pts.length ) {
 				try { m.fitBounds( pts, { padding: [ 40, 40 ], maxZoom: 12 } ); } catch ( e ) {}
 			}
@@ -180,7 +184,7 @@
 				if ( emptyEl ) { emptyEl.hidden = res.data.found !== 0; }
 				if ( loadmore ) { loadmore.hidden = paged >= maxPages; }
 				initHours();
-				renderMarkers( res.data.markers || [], append );
+				renderMarkers( res.data.markers || [], append, res.data.center );
 			} );
 		}
 
@@ -223,12 +227,11 @@
 			}
 			function choose( m ) {
 				kwEl.value = m.label;
-				if ( m.loc ) {
-					kwEl.dataset.locSlug = m.loc;
-					if ( locEl ) { locEl.value = m.loc; }
-				} else {
-					delete kwEl.dataset.locSlug;
-				}
+				// Proximity search from the picked point — always surfaces the
+				// nearest contractors, even if none are in that exact area.
+				kwEl.dataset.nearLat = m.lat;
+				kwEl.dataset.nearLng = m.lng;
+				if ( locEl ) { locEl.value = ''; } // don't also constrain by state
 				closeTA();
 				run( false );
 			}
@@ -248,7 +251,8 @@
 			}
 
 			kwEl.addEventListener( 'input', function () {
-				delete kwEl.dataset.locSlug; // typing invalidates a prior pick
+				delete kwEl.dataset.nearLat; // typing invalidates a prior pick
+				delete kwEl.dataset.nearLng;
 				var q = kwEl.value.trim();
 				if ( q.length < 3 ) { closeTA(); return; }
 				clearTimeout( taTimer );
