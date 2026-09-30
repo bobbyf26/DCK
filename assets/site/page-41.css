@@ -1,0 +1,83 @@
+/* DCK site: page 41 styles. Moved out of the page content on 2026-09-28; loaded by dck-site-assets.php. */
+/* DCK Signup page styling (page 41) */
+/* monochrome theme: override plugin palette (black/white/gray, blue reserved for accents) */
+.dck-profile, .dck-directory-page, .dck-form-page { --dck-brand: #111111; --dck-brand-deep: #000000; --dck-brand-soft: #EFEFEF; --dck-ink: #111111; --dck-muted: #6B6B6B; --dck-line: #E3E3E3; --dck-ground: #F6F6F6; --dck-shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.08); }
+.page-id-41 h1 { display: none; }
+.page-id-41 .dck-form-page h1 { display: block; }
+.page-id-41 [class*="breadcrumb" i], .page-id-41 nav[aria-label="Breadcrumb"] { display: none; }
+/* site chrome: auth nav button + modal fixes */
+body:not(.logged-in) .dck-nav-account { display: none !important; }
+body.logged-in .dck-nav-login { display: none !important; }
+.dck-nav-btn { margin-left: 10px; }
+.dck-nav-btn a, li.dck-nav-btn > a { display: inline-block; background: #111111 !important; color: #ffffff !important; border-radius: 999px; padding: 8px 18px; font-weight: 700 !important; }
+.dck-nav-btn a:hover { background: linear-gradient(120deg, #1E62B4, #14406F) !important; color: #ffffff !important; text-decoration: none; }
+.dck-nav-btn a span, .dck-nav-btn a div, .dck-nav-btn a * { color: #ffffff !important; font-weight: 700 !important; }
+.dck-nav-btn a *, .dck-nav-btn a:hover *, .dck-nav-btn a:focus * { background: transparent !important; box-shadow: none !important; }
+.dck-nav-btn a { transition: transform .15s ease, box-shadow .2s ease, background .15s ease; }
+.dck-nav-btn a:hover, .dck-nav-btn a:focus { background: linear-gradient(120deg, #1E62B4, #14406F) !important; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.35); }
+.dckx-dark-header { background: linear-gradient(120deg, #000000, #1C1C1C 70%, #14406F 170%) !important; border: 0 !important; box-shadow: 0 2px 12px rgba(0,0,0,.3); }
+.dckx-dark-header > div, .dckx-dark-header nav, .dckx-dark-header ul { border: 0 !important; }
+.dckx-dark-header a { color: #fff !important; }
+.dckx-dark-header a:hover { color: #CFE0F5 !important; }
+.dckx-dark-header a, .dckx-dark-header a span, .dckx-dark-header a div, .dckx-dark-header a * { color: #ffffff !important; font-weight: 600 !important; }
+.dckx-dark-header a:hover *, .dckx-dark-header a:focus * { color: #CFE0F5 !important; }
+.dckx-dark-header li:not(.dck-nav-btn) a, .dckx-dark-header li:not(.dck-nav-btn) a *, .dckx-dark-header li:not(.dck-nav-btn) a:hover, .dckx-dark-header li:not(.dck-nav-btn) a:hover *, .dckx-dark-header li:not(.dck-nav-btn) a:focus, .dckx-dark-header li:not(.dck-nav-btn) a:focus * { background: transparent !important; box-shadow: none !important; }
+.dckx-dark-header li:not(.dck-nav-btn) a { transition: color .15s ease, transform .15s ease; }
+.dckx-dark-header li:not(.dck-nav-btn) a:hover, .dckx-dark-header li:not(.dck-nav-btn) a:hover * { color: #7FB2E5 !important; }
+.dckx-dark-header li:not(.dck-nav-btn) a:hover { transform: translateY(-1px); text-decoration: underline !important; text-underline-offset: 8px; text-decoration-thickness: 2px; text-decoration-color: #1E62B4; }
+.dckx-dark-header .dck-nav-btn a { background: #fff !important; }
+.dckx-dark-header .dck-nav-btn a, .dckx-dark-header .dck-nav-btn a * { color: #111111 !important; }
+.dckx-dark-header .dck-nav-btn a:hover { background: #E7EFF9 !important; }
+.dckx-dark-header img[alt="Decorative Concrete Kingdom"] { background: none !important; padding: 0 !important; }
+.dckx-dark-header button, .dckx-dark-header svg { color: #fff !important; fill: #fff !important; }
+.dckx-login-card br { display: none !important; }
+.dckx-login-card .dckx-kicker { font-size: 20px; padding: 8px 20px; letter-spacing: .05em; }
+body.page-id-41 { background: #F5F5F5; overflow-x: hidden; }
+.page-id-41 .dck-form-page { width: 100vw; position: relative; left: 50%; margin-left: -50vw; }
+.page-id-41 .dck-form-page .dck-wrap { max-width: min(1700px, 94vw); }
+.page-id-41 .dck-form-page .dck-narrow { max-width: 780px; }
+.page-id-41 .dck-form-page h1 { font-size: clamp(28px, 3vw, 40px); }
+.page-id-41 .dck-form-page h1::before { content: "For contractors"; display: table; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--dck-brand); background: var(--dck-brand-soft); border-radius: 999px; padding: 4px 12px; margin-bottom: 12px; }
+.page-id-41 .dck-form-page form { background: var(--dck-card); border: 1px solid var(--dck-line); border-radius: 16px; padding: 28px; box-shadow: var(--dck-shadow); margin-top: 18px; }
+.page-id-41 .dck-stack input, .page-id-41 .dck-stack select, .page-id-41 .dck-stack textarea, .page-id-41 .dck-grid2 input, .page-id-41 .dck-grid2 select { background: var(--dck-ground); }
+.page-id-41 .dck-form-page form .dck-btn { width: 100%; padding: 14px 22px; font-size: 16px; }
+.page-id-41 .dck-form-page form .dck-btn:hover { background: linear-gradient(120deg, #1E62B4, #14406F); filter: none; }
+/* logged-in notice as hero panel (flash notices keep compact styling) */
+.page-id-41 .dck-notice { display: block; background: linear-gradient(135deg, rgba(5,8,12,.93), rgba(12,32,60,.85)), url('https://incrediblecontracting.com/wp-content/uploads/2026/07/showroom-hero.webp') center/cover no-repeat; border-radius: 20px; padding: 64px 24px; text-align: center; color: #ffffff !important; font-size: 0; font-weight: 700; max-width: min(1200px, 94vw); margin: 12px auto 36px; }
+.page-id-41 .dck-notice::before { content: "You are logged in."; display: block; font-size: 21px; font-weight: 700; color: #ffffff; }
+.page-id-41 .dck-notice a { display: table; margin: 20px auto 0; background: #ffffff; color: #111111 !important; font-weight: 700; border-radius: 999px; padding: 12px 26px; text-decoration: none; font-size: 16px; transition: transform .15s; }
+.page-id-41 .dck-notice a:hover { transform: translateY(-2px); text-decoration: none; }
+.page-id-41 .dck-notice--success, .page-id-41 .dck-notice--error { background: #E3F2EA; color: #1F8A54 !important; font-size: 14px; font-weight: 400; padding: 12px 16px; border-radius: 10px; text-align: left; max-width: 780px; margin: 12px auto; }
+.page-id-41 .dck-notice--error { background: #FAE9E6; color: #C43D2F !important; }
+.page-id-41 .dck-notice--success::before, .page-id-41 .dck-notice--error::before { content: none; }
+/* benefits section */
+.dckx-signup-extras .dck-wrap { padding-top: 0; }
+.dckx-section { margin: 16px 0 56px; }
+.dckx-h2 { font-size: 26px; font-weight: 800; letter-spacing: -.01em; margin: 0 0 6px; }
+.dckx-h2::after { content: ""; display: block; width: 46px; height: 4px; border-radius: 2px; background: linear-gradient(90deg, #1E62B4, #7FB2E5); margin-top: 8px; }
+.dckx-sub { color: var(--dck-muted); margin: 0 0 22px; font-size: 16px; }
+.dckx-kicker { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--dck-brand); background: var(--dck-brand-soft); border-radius: 999px; padding: 4px 12px; margin-bottom: 10px; }
+.dckx-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.dckx-3col .dck-card { margin: 0; }
+.dckx-why { border-top: 3px solid #111111; transition: transform .15s, box-shadow .15s; }
+.dckx-why:hover { transform: translateY(-3px); box-shadow: var(--dck-shadow); }
+.dckx-ico { width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, #000000, #14406F); color: #fff; display: grid; place-items: center; margin-bottom: 14px; }
+.dckx-ico svg { fill: currentColor; }
+.dckx-why h3 { margin: 0 0 6px; font-size: 17px; font-weight: 700; }
+.dckx-why p { margin: 0; font-size: 14.5px; color: var(--dck-muted); }
+/* login modal */
+.dckx-login-overlay { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; background: rgba(0,0,0,.66); backdrop-filter: blur(3px); padding: 20px; }
+.dckx-login-overlay[hidden] { display: none; }
+.dckx-login-card { position: relative; width: 100%; max-width: 420px; background: #fff; border-radius: 18px; padding: 30px 28px; box-shadow: 0 24px 64px rgba(0,0,0,.4); color: #111111; }
+.dckx-login-card h2 { margin: 0 0 16px; font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
+.dckx-login-card form { display: grid; gap: 12px; margin: 0; background: none; border: 0; box-shadow: none; padding: 0; }
+.dckx-login-card form label { display: flex; flex-direction: column; gap: 5px; font-weight: 600; font-size: 13px; }
+.dckx-login-card input[type="text"], .dckx-login-card input[type="password"] { padding: 11px 12px; border: 1px solid #E3E3E3; border-radius: 8px; background: #F6F6F6; font: inherit; font-size: 14px; }
+.dckx-login-remember { flex-direction: row !important; align-items: center; gap: 8px; font-weight: 400 !important; }
+.dckx-login-card .dck-btn { width: 100%; padding: 13px; font-size: 15px; border: 0; cursor: pointer; background: #111111; }
+.dckx-login-card .dck-btn:hover { background: linear-gradient(120deg, #1E62B4, #14406F); filter: none; }
+.dckx-login-x { position: absolute; top: 12px; right: 14px; background: none; border: 0; font-size: 26px; line-height: 1; color: #6B6B6B; cursor: pointer; }
+.dckx-login-links { margin: 14px 0 0; text-align: center; font-size: 13.5px; }
+@media (max-width: 800px) {
+  .dckx-3col { grid-template-columns: 1fr; }
+}
