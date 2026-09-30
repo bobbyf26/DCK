@@ -3,7 +3,7 @@
  * Plugin Name:       DCK Directory
  * Plugin URI:        https://github.com/bobbyf26/DCK
  * Description:        Decorative concrete contractor directory — searchable landing page, contractor profiles, free front-end signup, and paid premium listings.
- * Version:           1.9.2
+ * Version:           1.10.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Decorative Concrete Kingdom
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // No direct access.
 }
 
-define( 'DCK_DIR_VERSION', '1.9.2' );
+define( 'DCK_DIR_VERSION', '1.10.0' );
 define( 'DCK_DIR_FILE', __FILE__ );
 define( 'DCK_DIR_PATH', plugin_dir_path( __FILE__ ) );
 define( 'DCK_DIR_URL', plugin_dir_url( __FILE__ ) );
@@ -32,6 +32,8 @@ require_once DCK_DIR_PATH . 'includes/class-dck-shortcodes.php';
 require_once DCK_DIR_PATH . 'includes/class-dck-templates.php';
 require_once DCK_DIR_PATH . 'includes/class-dck-demo.php';
 require_once DCK_DIR_PATH . 'includes/class-dck-login.php';
+require_once DCK_DIR_PATH . 'includes/class-dck-seo-locations.php';
+require_once DCK_DIR_PATH . 'dck-site-assets.php';
 
 /**
  * Boot the plugin once WordPress has loaded.
@@ -46,6 +48,7 @@ function dck_directory_init() {
 	DCK_Templates::instance();
 	DCK_Demo::instance();
 	DCK_Login::instance();
+	DCK_SEO_Locations::instance();
 }
 add_action( 'plugins_loaded', 'dck_directory_init' );
 
