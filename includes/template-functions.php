@@ -77,7 +77,7 @@ function dck_geocode( $query ) {
 		return is_array( $cached ) && isset( $cached['lat'] ) ? $cached : null;
 	}
 	$url  = add_query_arg(
-		array( 'q' => rawurlencode( $query ), 'format' => 'json', 'limit' => 1, 'addressdetails' => 0 ),
+		array( 'q' => rawurlencode( $query ), 'format' => 'json', 'limit' => 1, 'addressdetails' => 0, 'countrycodes' => 'us' ),
 		'https://nominatim.openstreetmap.org/search'
 	);
 	// Nominatim requires an identifying User-Agent / referer.
@@ -117,10 +117,12 @@ function dck_maybe_geocode_listing( $post_id ) {
 		get_post_meta( $post_id, '_dck_state', true ),
 		get_post_meta( $post_id, '_dck_zip', true ),
 	);
-	$addr = trim( implode( ' ', array_filter( array_map( 'trim', $parts ) ) ) );
+	$addr = trim( implode( ', ', array_filter( array_map( 'trim', $parts ) ) ) );
 	if ( '' === $addr ) {
 		return;
 	}
+	// US-only directory: anchor the lookup so "Richmond, VA" never lands in Australia.
+	$addr .= ', USA';
 	$hash = md5( $addr );
 	if ( get_post_meta( $post_id, '_dck_geo_hash', true ) === $hash && '' !== (string) get_post_meta( $post_id, '_dck_lat', true ) ) {
 		return; // Unchanged and already located.

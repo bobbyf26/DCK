@@ -58,7 +58,7 @@ class DCK_Templates {
 		}
 		if ( is_singular( DCK_Post_Types::POST_TYPE ) && in_the_loop() && is_main_query() ) {
 			$rendering = true;
-			$out       = dck_render_profile( get_the_ID() );
+			$out       = apply_filters( 'dck_profile_html', dck_render_profile( get_the_ID() ), get_the_ID() );
 			$rendering = false;
 			return $out;
 		}

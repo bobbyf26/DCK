@@ -114,7 +114,7 @@ class DCK_Settings {
 				'title'  => __( 'Directory / search page', 'dck-directory' ),
 				'fields' => array(
 					'hero_title'      => array( 'label' => __( 'Hero heading', 'dck-directory' ), 'type' => 'text', 'default' => 'Find a decorative concrete pro near you' ),
-					'hero_subtitle'   => array( 'label' => __( 'Hero subtext', 'dck-directory' ), 'type' => 'text', 'default' => 'Browse verified contractors for stamped, stained, epoxy, and polished concrete.' ),
+					'hero_subtitle'   => array( 'label' => __( 'Hero subtext', 'dck-directory' ), 'type' => 'text', 'default' => 'Browse local contractors for stamped, stained, epoxy, and polished concrete.' ),
 					'search_button'   => array( 'label' => __( 'Search button label', 'dck-directory' ), 'type' => 'text', 'default' => 'Search' ),
 					'systems_heading' => array( 'label' => __( '"Browse by system" heading', 'dck-directory' ), 'type' => 'text', 'default' => 'Browse by coating system' ),
 					'states_heading'  => array( 'label' => __( '"Browse by state" heading', 'dck-directory' ), 'type' => 'text', 'default' => 'Browse by state' ),
