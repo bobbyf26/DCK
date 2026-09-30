@@ -553,3 +553,20 @@ body.single-dck_contractor { overflow-x: hidden; }
 .dck-page.current { background: var(--dck-brand); color: #fff; border-color: var(--dck-brand); cursor: default; }
 .dck-page:disabled { opacity: .5; cursor: default; }
 .dck-page.dck-page-gap { border: 0; background: none; opacity: .7; cursor: default; min-width: 0; padding: 7px 4px; }
+
+/* ===== Location directory pages (/contractors/…) + breadcrumbs ===== */
+.dck-crumbs ol { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 0; font-size: 13px; color: var(--dck-muted); }
+.dck-crumbs li { display: inline-flex; align-items: center; }
+.dck-crumbs li + li::before { content: "›"; margin: 0 8px; color: var(--dck-line); }
+.dck-crumbs a { color: var(--dck-muted); }
+.dck-crumbs a:hover { color: var(--dck-brand); }
+.dck-crumbs-wrap .dck-wrap { padding-bottom: 0; }
+.dck-crumbs-wrap .dck-crumbs ol { margin-bottom: 0; }
+.dck-loc-head { margin: 4px 0 22px; }
+.dck-loc-intro { margin: 10px 0 0; max-width: 760px; color: var(--dck-muted); font-size: 16px; line-height: 1.55; }
+.dck-loc-section { margin: 28px 0; }
+.dck-loc-section h2 { font-size: 20px; font-weight: 700; margin: 0 0 14px; }
+.dck-loc-section > p { margin: -6px 0 14px; font-size: 14px; }
+.dck-location-page .dck-pagination { margin-top: 20px; }
+.dck-location-page .dck-pagination .page-numbers { display: inline-block; min-width: 36px; padding: 7px 10px; margin: 0 3px 6px 0; text-align: center; border: 1px solid var(--dck-line); border-radius: 8px; background: var(--dck-card); font-size: 14px; }
+.dck-location-page .dck-pagination .current { background: var(--dck-brand); border-color: var(--dck-brand); color: #fff; }
